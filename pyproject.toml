@@ -1,0 +1,35 @@
+[project]
+name = "fastapi-backend"
+version = "0.1.0"
+description = "FastAPI backend project"
+requires-python = ">=3.11"
+
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "python-dotenv"
+]
+
+# Ruff (Linter + Formatter)
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+# Правила перевірки
+select = ["E", "F", "I"]
+ignore = []
+
+# Авто-імпорти (sort imports)
+fix = true
+
+# Black (Formatter)
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+# Pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v"
