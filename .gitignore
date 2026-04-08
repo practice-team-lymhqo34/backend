@@ -1,4 +1,4 @@
-# Byte-compiled / cache
+# Byte-compiled cache files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -13,9 +13,10 @@ env/
 .env
 .env.*
 *.env
+!.env.example
 .flaskenv
 
-# Testing / coverage
+# Testing and coverage
 .pytest_cache/
 .coverage
 htmlcov/
@@ -24,13 +25,13 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-# Distribution / packaging
+# Distribution and packaging
 dist/
 build/
 *.egg-info/
 *.egg
 
-# IDE
+# IDE and editors
 .vscode/
 .idea/
 *.swp
@@ -44,6 +45,6 @@ build/
 *.log
 logs/
 
-# OS files
+# OS generated files
 .DS_Store
 Thumbs.db
