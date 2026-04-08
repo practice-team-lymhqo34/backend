@@ -1,7 +1,7 @@
 # LogiFlow — Backend
 
-> LogiFlow backend is a REST API service that handles authentication, shipment management, warehouse operations, and
-> core business logic for the logistics platform.
+> LogiFlow is a logistics management platform that helps teams track shipments,
+> manage warehouses, and automate delivery workflows.
 
 ## Features
 
@@ -13,7 +13,7 @@
 
 ## Tech Stack
 
-- Python 3.11+
+- Python 3.13
 - FastAPI
 - Uvicorn
 - PostgreSQL
@@ -25,21 +25,41 @@
 
 ### Prerequisites
 
-- Python >= 3.11
+- Python >= 3.13
 - PostgreSQL
 
 ### Installation
 
 ```bash
-git clone <your-backend-repo-url>
+git clone https://github.com/practice-team-lymhqo34/backend.git
 cd backend
-
 python -m venv .venv
+```
 
-### Windows
+#### Windows
+
+```bash
 .venv\Scripts\activate
+```
 
-### Linux / Mac
+#### Linux / Mac
+
+```bash
 source .venv/bin/activate
+```
 
+### Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
+
+### Running
+
+```bash
+uvicorn app.main:app --reload
+Application will be available at:
+http://127.0.0.1:8000
+API docs:
+http://127.0.0.1:8000/docs
+```
