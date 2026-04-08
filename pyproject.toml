@@ -1,35 +1,25 @@
 [project]
-name = "fastapi-backend"
+name = "LogiFlow"
 version = "0.1.0"
-description = "FastAPI backend project"
-requires-python = ">=3.11"
-
+description = "LogiFlow project for logistics management API"
+requires-python = ">=3.13"
 dependencies = [
     "fastapi",
-    "uvicorn[standard]",
-    "pydantic",
-    "python-dotenv"
+    "uvicorn[standard]"
 ]
 
-# Ruff (Linter + Formatter)
-[tool.ruff]
-line-length = 88
-target-version = "py311"
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pre-commit"
+]
 
-# Правила перевірки
-select = ["E", "F", "I"]
-ignore = []
+[build-system]
+requires = ["uv-build<0.12"]
+build-backend = "uv_build"
 
-# Авто-імпорти (sort imports)
-fix = true
-
-# Black (Formatter)
-[tool.black]
-line-length = 88
-target-version = ["py311"]
-
-# Pytest
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-addopts = "-v"
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+    "ruff>=0.15.9",
+]
