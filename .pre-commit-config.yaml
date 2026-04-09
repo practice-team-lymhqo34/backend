@@ -2,7 +2,8 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.9
     hooks:
-      - id: ruff
+      - id: ruff-check
+        args: [ "--fix" ]
       - id: ruff-format
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.22.0
