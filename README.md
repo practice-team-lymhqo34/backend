@@ -18,8 +18,7 @@
 - Uvicorn
 - PostgreSQL 17
 - SQLAlchemy
-- Ruff + Black
-- Pytest
+- Ruff
 
 ## Getting Started
 
@@ -50,14 +49,28 @@ source .venv/bin/activate
 
 ### Install dependencies
 
+#### For development
+
 ```bash
 uv sync
 ```
 
-### Running
+#### For production
 
 ```bash
-uvicorn src.server.main:app --host 0.0.0.0 --port 8000 --workers 4
-API URL: http://127.0.0.1:8000
-Swagger Docs: http://127.0.0.1:8000/docs
+uv synс --no-dev
+```
+
+### Running
+
+#### Development
+
+```bash
+uvicorn src.main:app --reload
+```
+
+#### Production
+
+```bash
+uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
