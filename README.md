@@ -16,7 +16,7 @@
 - Python 3.13
 - FastAPI
 - Uvicorn
-- PostgreSQL
+- PostgreSQL 17
 - SQLAlchemy
 - Ruff + Black
 - Pytest
@@ -26,14 +26,14 @@
 ### Prerequisites
 
 - Python >= 3.13
-- PostgreSQL
+- PostgreSQL 17
 
 ### Installation
 
 ```bash
 git clone https://github.com/practice-team-lymhqo34/backend.git
 cd backend
-python -m venv .venv
+uv venv
 ```
 
 #### Windows
@@ -57,9 +57,7 @@ uv sync
 ### Running
 
 ```bash
-uvicorn app.main:app --reload
-Application will be available at:
-http://127.0.0.1:8000
-API docs:
-http://127.0.0.1:8000/docs
+uvicorn src.server.main:app --host 0.0.0.0 --port 8000 --workers 4
+API URL: http://127.0.0.1:8000
+Swagger Docs: http://127.0.0.1:8000/docs
 ```
