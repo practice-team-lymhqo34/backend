@@ -1,6 +1,7 @@
+from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserRole(str, Enum):
@@ -14,6 +15,7 @@ class UserCreate(BaseModel):
     password: str
     full_name: str
     role: UserRole
+    phone_number: str = Field(..., example="+380991234567")
 
 
 class UserLogin(BaseModel):
@@ -26,6 +28,8 @@ class UserOut(BaseModel):
     email: EmailStr
     role: UserRole
     full_name: str
+    phone_number: str
+    created_at: datetime  # Додаємо дату створення у відповідь
 
     class Config:
         from_attributes = True

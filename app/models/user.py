@@ -1,8 +1,8 @@
 import enum
+from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import Column, Enum, Integer, String
-
-from app.db.base_class import Base
+from sqlmodel import Column, DateTime, Enum, Field, SQLModel, func
 
 
 class UserRole(str, enum.Enum):
@@ -11,11 +11,15 @@ class UserRole(str, enum.Enum):
     RECEIVER = "receiver"
 
 
-class User(Base):
+class User(SQLModel, table=True):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    role = Column(Enum(UserRole), nullable=False)
-    full_name = Column(String)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(unique=True, index=True, nullable=False)
+    hashed_password: str = Field(nullable=False)
+    role: UserRole = Field(sa_column=Column(Enum(UserRole), nullable=False))
+    full_name: Optional[str] = None
+    phone_number: str = Field(unique=True, index=True, nullable=False)
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
