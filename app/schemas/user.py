@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -19,7 +20,8 @@ class UserCreate(BaseModel):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
     password: str
 
 
@@ -29,7 +31,7 @@ class UserOut(BaseModel):
     role: UserRole
     full_name: str
     phone_number: str
-    created_at: datetime  # Додаємо дату створення у відповідь
+    created_at: datetime
 
     class Config:
         from_attributes = True
