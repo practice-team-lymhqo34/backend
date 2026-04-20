@@ -1,6 +1,6 @@
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.core.config import settings
@@ -10,27 +10,39 @@ from app.core.security import (
     verify_password,
 )
 from app.crud import user as crud_user
-from app.schemas.user import UserCreate, UserOut
+from app.schemas.user import UserCreate, UserLogin, UserOut
 
 router = APIRouter()
 
 
 @router.post("/register", response_model=UserOut)
-def register(user_in: UserCreate, db: Session = Depends(deps.get_db)):
-    user = crud_user.get_user_by_email(db, email=user_in.email)
+async def register(
+    user_in: UserCreate, db: AsyncSession = Depends(deps.get_db)
+):
+    user = await crud_user.get_user_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(status_code=400, detail="User already exists")
-    return crud_user.create_user(db, user_in)
+
+    return await crud_user.create_user(db, user_in)
 
 
-@router.post("/login")
-def login(
-    response: Response, user_in: UserCreate, db: Session = Depends(deps.get_db)
+@router.post("/login", response_model=UserOut)
+async def login(
+    response: Response,
+    user_in: UserLogin,
+    db: AsyncSession = Depends(deps.get_db),
 ):
-    user = crud_user.get_user_by_email(db, email=user_in.email)
+    user = None
+    if user_in.email:
+        user = await crud_user.get_user_by_email(db, email=user_in.email)
+    elif user_in.phone_number:
+        user = await crud_user.get_user_by_phone(
+            db, phone=user_in.phone_number
+        )
+
     if not user or not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(
-            status_code=400, detail="Incorrect email or password"
+            status_code=400, detail="Incorrect email, phone or password"
         )
 
     access_token = create_access_token(
@@ -57,11 +69,11 @@ def login(
         path="/api/v1/auth/refresh",
     )
 
-    return {"message": "Logged in successfully", "role": user.role}
+    return user
 
 
 @router.post("/logout")
-def logout(response: Response):
+async def logout(response: Response):
     response.delete_cookie(
         key="access_token",
         httponly=True,
@@ -75,12 +87,14 @@ def logout(response: Response):
         secure=settings.COOKIE_SECURE,
         path="/api/v1/auth/refresh",
     )
-    return {"message": "Logged out successfully"}
+    return {"status": "ok", "message": "Logged out successfully"}
 
 
 @router.post("/refresh")
-def refresh_token(
-    request: Request, response: Response, db: Session = Depends(deps.get_db)
+async def refresh_token(
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(deps.get_db),
 ):
     token = request.cookies.get("refresh_token")
     if not token:
@@ -94,7 +108,7 @@ def refresh_token(
             raise HTTPException(status_code=401, detail="Invalid token type")
 
         email = payload.get("sub")
-        user = crud_user.get_user_by_email(db, email=email)
+        user = await crud_user.get_user_by_email(db, email=email)
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
@@ -110,7 +124,7 @@ def refresh_token(
             samesite="lax",
             secure=settings.COOKIE_SECURE,
         )
-        return {"message": "Token refreshed"}
+        return {"status": "ok", "message": "Token refreshed"}
 
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
