@@ -2,10 +2,11 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 from pwdlib import PasswordHash
+from pwdlib.hashers.argon2 import Argon2Hasher
 
 from app.core.config import settings
 
-password_hash = PasswordHash.recommended()
+password_hash = PasswordHash(hashers=[Argon2Hasher()])
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
