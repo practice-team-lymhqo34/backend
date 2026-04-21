@@ -5,7 +5,7 @@ from typing import Optional
 from sqlmodel import Column, DateTime, Enum, Field, SQLModel, func
 
 
-class UserRole(str, enum.Enum):
+class UserRole(enum.StrEnum):
     SENDER = "sender"
     DRIVER = "driver"
     RECEIVER = "receiver"
