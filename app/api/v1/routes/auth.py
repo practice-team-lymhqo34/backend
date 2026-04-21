@@ -7,23 +7,18 @@ from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
-    verify_password,
 )
-from app.crud import user as crud_user
 from app.schemas.user import UserCreate, UserLogin, UserOut
+from app.services.user_service import user_service
 
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserOut)
+@router.post("/register", response_model=UserOut, status_code=201)
 async def register(
     user_in: UserCreate, db: AsyncSession = Depends(deps.get_db)
 ):
-    user = await crud_user.get_user_by_email(db, email=user_in.email)
-    if user:
-        raise HTTPException(status_code=400, detail="User already exists")
-
-    return await crud_user.create_user(db, user_in)
+    return await user_service.register_new_user(db, user_in=user_in)
 
 
 @router.post("/login", response_model=UserOut)
@@ -32,18 +27,7 @@ async def login(
     user_in: UserLogin,
     db: AsyncSession = Depends(deps.get_db),
 ):
-    user = None
-    if user_in.email:
-        user = await crud_user.get_user_by_email(db, email=user_in.email)
-    elif user_in.phone_number:
-        user = await crud_user.get_user_by_phone(
-            db, phone=user_in.phone_number
-        )
-
-    if not user or not verify_password(user_in.password, user.hashed_password):
-        raise HTTPException(
-            status_code=400, detail="Incorrect email, phone or password"
-        )
+    user = await user_service.authenticate(db, user_in=user_in)
 
     access_token = create_access_token(
         data={"sub": user.email, "role": user.role}
@@ -58,17 +42,15 @@ async def login(
         samesite="lax",
         secure=settings.COOKIE_SECURE,
     )
-
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         samesite="lax",
         secure=settings.COOKIE_SECURE,
         path="/api/v1/auth/refresh",
     )
-
     return user
 
 
@@ -87,7 +69,6 @@ async def logout(response: Response):
         secure=settings.COOKIE_SECURE,
         path="/api/v1/auth/refresh",
     )
-    return {"status": "ok", "message": "Logged out successfully"}
 
 
 @router.post("/refresh")
@@ -107,8 +88,9 @@ async def refresh_token(
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=401, detail="Invalid token type")
 
-        email = payload.get("sub")
-        user = await crud_user.get_user_by_email(db, email=email)
+        user = await user_service.get_user_by_email(
+            db, email=payload.get("sub")
+        )
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
@@ -124,7 +106,6 @@ async def refresh_token(
             samesite="lax",
             secure=settings.COOKIE_SECURE,
         )
-        return {"status": "ok", "message": "Token refreshed"}
-
+        return None
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
