@@ -4,15 +4,15 @@ version = "0.1.0"
 description = "LogiFlow project for logistics management API"
 requires-python = ">=3.13"
 dependencies = [
-    "alembic>=1.13.0",
-    "fastapi>=0.115.0",
-    "pydantic[email]>=2.4.0",
+    "alembic>=1.18.4",
+    "asyncpg>=0.29.0",
+    "fastapi[standard]>=0.115.0",
     "pwdlib[argon2]>=0.3.0",
     "pydantic-settings>=2.4.0",
+    "pydantic[email]>=2.4.0",
     "pyjwt>=2.10.1",
     "sqlmodel>=0.0.34",
     "uvicorn[standard]>=0.30.0",
-    "asyncpg>=0.29.0",
 ]
 
 [dependency-groups]
