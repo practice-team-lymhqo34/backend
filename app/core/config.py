@@ -1,6 +1,8 @@
+import json
 import os
+from typing import Any, List
 
-from pydantic import computed_field
+from pydantic import PostgresDsn, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = os.path.dirname(
@@ -12,11 +14,11 @@ ENV_PATH = os.path.join(BASE_DIR, ".env")
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_PATH, extra="ignore")
 
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_SERVER: str
-    POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: int = 5432
+    DB_NAME: str
 
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
@@ -24,10 +26,30 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     COOKIE_SECURE: bool = True
 
+    CORS_ORIGINS: Any = []
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, str) and v.startswith("["):
+            return json.loads(v)
+        return v
+
     @computed_field
     @property
     def DATABASE_URL(self) -> str:
-        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        return str(
+            PostgresDsn.build(
+                scheme="postgresql+asyncpg",
+                username=self.DB_USER,
+                password=self.DB_PASSWORD,
+                host=self.DB_HOST,
+                port=self.DB_PORT,
+                path=self.DB_NAME,
+            )
+        )
 
 
 settings = Settings()

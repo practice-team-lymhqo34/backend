@@ -41,6 +41,7 @@ async def login(
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax",
         secure=settings.COOKIE_SECURE,
+        path="/api/",
     )
     response.set_cookie(
         key="refresh_token",
@@ -61,6 +62,7 @@ async def logout(response: Response):
         httponly=True,
         samesite="lax",
         secure=settings.COOKIE_SECURE,
+        path="/api/",
     )
     response.delete_cookie(
         key="refresh_token",
@@ -105,6 +107,7 @@ async def refresh_token(
             max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             samesite="lax",
             secure=settings.COOKIE_SECURE,
+            path="/api/",
         )
         return None
     except jwt.PyJWTError:
