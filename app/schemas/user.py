@@ -1,14 +1,9 @@
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
-
-class UserRole(str, Enum):
-    SENDER = "sender"
-    DRIVER = "driver"
-    RECEIVER = "receiver"
+from app.enum import UserRole
 
 
 class UserCreate(BaseModel):

@@ -1,14 +1,9 @@
-import enum
 from datetime import datetime
 from typing import Optional
 
 from sqlmodel import Column, DateTime, Enum, Field, SQLModel, func
 
-
-class UserRole(enum.StrEnum):
-    SENDER = "sender"
-    DRIVER = "driver"
-    RECEIVER = "receiver"
+from app.enum import UserRole
 
 
 class User(SQLModel, table=True):
