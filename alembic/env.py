@@ -3,22 +3,23 @@ from logging.config import fileConfig
 
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlmodel import SQLModel
 
 from alembic import context
-from app.core.config import settings
-from app.db.base_class import Base
+from app.models.user import User
 
-# Це об'єкт конфігурації Alembic
+_ = User
+
+from app.core.config import settings  # noqa: E402
+
 config = context.config
 
-# Встановлюємо URL безпосередньо з налаштувань (збережемо postgresql+asyncpg)
 config.set_main_option("sqlalchemy.url", str(settings.DATABASE_URL))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Твої метадані моделей
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 
 def run_migrations_offline() -> None:
@@ -34,13 +35,16 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        render_as_batch=True,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
 
 async def run_migrations_online() -> None:
-    # Використовуємо асинхронний двигун
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
@@ -56,5 +60,4 @@ async def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    # Запускаємо асинхронну функцію
     asyncio.run(run_migrations_online())
