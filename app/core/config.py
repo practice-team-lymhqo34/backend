@@ -12,7 +12,11 @@ ENV_PATH = os.path.join(BASE_DIR, ".env")
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ENV_PATH, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=ENV_PATH, extra="ignore", case_sensitive=True
+    )
+
+    DEBUG: bool = False
 
     DB_USER: str
     DB_PASSWORD: str

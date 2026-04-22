@@ -4,3 +4,9 @@
 __pycache__
 *.pyc
 .env
+tests
+README.md
+LICENSE
+deployment
+.pytest_cache
+.ruff_cache
