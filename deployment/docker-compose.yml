@@ -3,27 +3,24 @@ services:
     image: postgres:17-alpine
     container_name: logiflow_db
     restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: logiflow
+    env_file:
+      - .env.db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    build: ..
-    container_name: logiflow_app
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: logiflow_backend
     depends_on:
       - db
     env_file:
       - ../.env
     ports:
       - "8000:8000"
-    volumes:
-      - ..:/app
-    working_dir: /app
 
 volumes:
   postgres_data:
