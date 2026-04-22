@@ -10,3 +10,4 @@ LICENSE
 deployment
 .pytest_cache
 .ruff_cache
+.dockerignore
