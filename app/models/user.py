@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlmodel import Column, DateTime, Enum, Field, SQLModel, func
 
-from app.enum import UserRole
+from app.enums import UserRole
 
 
 class User(SQLModel, table=True):

@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.enum import UserRole
+from app.enums import UserRole
 
 
 class UserCreate(BaseModel):
