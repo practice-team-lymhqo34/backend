@@ -15,6 +15,7 @@ services:
       context: ..
       dockerfile: deployment/Dockerfile
     container_name: logiflow_backend
+    restart: always
     depends_on:
       - db
     env_file:
