@@ -28,7 +28,8 @@ class ShipmentService:
         existing = await crud_shipment.get_shipment_by_order_id(db, order_id)
         if existing:
             raise HTTPException(
-                status_code=409, detail="Shipment already exists for this order"
+                status_code=409,
+                detail="Shipment already exists for this order",
             )
         return await crud_shipment.create_shipment(db, order_id, shipment_in)
 

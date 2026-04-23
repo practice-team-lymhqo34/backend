@@ -1,7 +1,7 @@
 from typing import Optional, Sequence
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 
 from app.models.route import Route
@@ -13,8 +13,12 @@ async def get_route_by_id(db: AsyncSession, route_id: int) -> Optional[Route]:
     return result.scalars().first()
 
 
-async def get_route_by_order_id(db: AsyncSession, order_id: int) -> Optional[Route]:
-    result = await db.execute(select(Route).where(col(Route.order_id) == order_id))
+async def get_route_by_order_id(
+    db: AsyncSession, order_id: int
+) -> Optional[Route]:
+    result = await db.execute(
+        select(Route).where(col(Route.order_id) == order_id)
+    )
     return result.scalars().first()
 
 
@@ -44,7 +48,9 @@ async def create_route(db: AsyncSession, route_in: RouteCreate) -> Route:
     return db_route
 
 
-async def update_route(db: AsyncSession, route: Route, route_in: RouteUpdate) -> Route:
+async def update_route(
+    db: AsyncSession, route: Route, route_in: RouteUpdate
+) -> Route:
     update_data = route_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(route, field, value)

@@ -22,13 +22,19 @@ class OrderService:
         return await crud_order.create_order(db, order_in, sender_id)
 
     async def update_order(
-        self, db: AsyncSession, order_id: int, order_in: OrderUpdate, sender_id: int
+        self,
+        db: AsyncSession,
+        order_id: int,
+        order_in: OrderUpdate,
+        sender_id: int,
     ):
         order = await self.get_order_or_404(db, order_id)
         if order.sender_id != sender_id:
             raise HTTPException(status_code=403, detail="Access denied")
         if order.status == OrderStatus.IN_PROGRESS:
-            raise HTTPException(status_code=409, detail="Order is already in progress")
+            raise HTTPException(
+                status_code=409, detail="Order is already in progress"
+            )
         return await crud_order.update_order(db, order, order_in)
 
     async def delete_order(

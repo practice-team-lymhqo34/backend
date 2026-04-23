@@ -3,6 +3,7 @@ from typing import Optional
 
 from sqlmodel import Column, DateTime, Field, SQLModel
 
+
 class Route(SQLModel, table=True):
     __tablename__ = "routes"
 

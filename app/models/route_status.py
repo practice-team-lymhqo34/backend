@@ -13,7 +13,9 @@ class RouteStatus(SQLModel, table=True):
 
     route_id: int = Field(foreign_key="routes.id", nullable=False)
     status: RouteStatusEnum = Field(
-        sa_column=Column(Enum(RouteStatusEnum, native_enum=False), nullable=False)
+        sa_column=Column(
+            Enum(RouteStatusEnum, native_enum=False), nullable=False
+        )
     )
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now())

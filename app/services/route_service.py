@@ -16,8 +16,12 @@ class RouteService:
     async def get_routes(self, db: AsyncSession, **filters):
         return await crud_route.get_routes(db, **filters)
 
-    async def create_route(self, db: AsyncSession, route_in: RouteCreate) -> Route:
-        existing = await crud_route.get_route_by_order_id(db, route_in.order_id)
+    async def create_route(
+        self, db: AsyncSession, route_in: RouteCreate
+    ) -> Route:
+        existing = await crud_route.get_route_by_order_id(
+            db, route_in.order_id
+        )
         if existing:
             raise HTTPException(
                 status_code=409, detail="Route already exists for this order"
@@ -29,7 +33,9 @@ class RouteService:
     ) -> Route:
         route = await self.get_route(db, route_id)
         if route.completed_at is not None:
-            raise HTTPException(status_code=409, detail="Route is already completed")
+            raise HTTPException(
+                status_code=409, detail="Route is already completed"
+            )
         return await crud_route.update_route(db, route, route_in)
 
     async def delete_route(self, db: AsyncSession, route_id: int) -> None:

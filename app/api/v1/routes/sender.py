@@ -5,16 +5,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_sender
 from app.enums import OrderStatus
+from app.schemas.notification import NotificationOut
 from app.schemas.order import OrderCreate, OrderOut, OrderUpdate
 from app.schemas.route import RouteCreate, RouteOut, RouteUpdate
 from app.schemas.route_status import RouteStatusOut
 from app.schemas.shipment import ShipmentOut
-from app.schemas.notification import NotificationOut
+from app.services.notification_service import notification_service
 from app.services.order_service import order_service
 from app.services.route_service import route_service
 from app.services.route_status_service import route_status_service
 from app.services.shipment_service import shipment_service
-from app.services.notification_service import notification_service
 
 router = APIRouter()
 
@@ -40,7 +40,9 @@ async def create_order(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_sender),
 ):
-    return await order_service.create_order(db, order_in, sender_id=current_user.id)
+    return await order_service.create_order(
+        db, order_in, sender_id=current_user.id
+    )
 
 
 @router.get("/orders/{order_id}", response_model=OrderOut)
@@ -169,7 +171,9 @@ async def get_notifications(
     )
 
 
-@router.patch("/notifications/{notification_id}", response_model=NotificationOut)
+@router.patch(
+    "/notifications/{notification_id}", response_model=NotificationOut
+)
 async def mark_notification_read(
     notification_id: int,
     db: AsyncSession = Depends(get_db),
@@ -185,5 +189,7 @@ async def mark_all_notifications_read(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_sender),
 ):
-    updated = await notification_service.mark_all_as_read(db, user_id=current_user.id)
+    updated = await notification_service.mark_all_as_read(
+        db, user_id=current_user.id
+    )
     return {"updated": updated}

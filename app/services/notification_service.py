@@ -13,7 +13,9 @@ class NotificationService:
             db, notification_id
         )
         if not notification:
-            raise HTTPException(status_code=404, detail="Notification not found")
+            raise HTTPException(
+                status_code=404, detail="Notification not found"
+            )
         return notification
 
     async def get_notifications(

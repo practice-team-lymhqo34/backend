@@ -6,11 +6,13 @@ class UserRole(enum.StrEnum):
     DRIVER = "driver"
     RECIPIENT = "recipient"
 
+
 class OrderStatus(enum.Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     CANCELED = "canceled"
+
 
 class RouteStatusEnum(enum.Enum):
     ASSIGNED = "assigned"
