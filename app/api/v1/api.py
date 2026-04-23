@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.routes import auth
-
+from app.api.v1.routes import auth, sender
 api_router = APIRouter()
 
 
@@ -11,3 +10,4 @@ async def health_check():
 
 
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(sender.router, prefix="/sender", tags=["sender"])
