@@ -1,8 +1,8 @@
-"""add orders routes shipments notifications
+"""add all tables
 
-Revision ID: dba26fb8e12f
-Revises: a283d016c91f
-Create Date: 2026-04-23 21:51:17.816274
+Revision ID: 44cb2df47560
+Revises: 04fd39533d08
+Create Date: 2026-04-23 23:45:28.334119
 
 """
 
@@ -14,8 +14,8 @@ import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "dba26fb8e12f"
-down_revision: Union[str, Sequence[str], None] = "a283d016c91f"
+revision: str = "44cb2df47560"
+down_revision: Union[str, Sequence[str], None] = "04fd39533d08"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -48,25 +48,11 @@ def upgrade() -> None:
     op.create_table(
         "orders",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("sender_id", sa.Integer(), nullable=True),
-        sa.Column("recipient_id", sa.Integer(), nullable=True),
+        sa.Column("title", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
-            "name", sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False
+            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
-        sa.Column("is_template", sa.Boolean(), nullable=False),
-        sa.Column(
-            "origin_address",
-            sqlmodel.sql.sqltypes.AutoString(length=150),
-            nullable=False,
-        ),
-        sa.Column(
-            "destination_address",
-            sqlmodel.sql.sqltypes.AutoString(length=150),
-            nullable=False,
-        ),
-        sa.Column(
-            "distance", sa.Numeric(precision=10, scale=3), nullable=False
-        ),
+        sa.Column("weight", sa.Float(), nullable=False),
         sa.Column(
             "status",
             sa.Enum(
@@ -77,8 +63,10 @@ def upgrade() -> None:
                 name="orderstatus",
                 native_enum=False,
             ),
+            server_default="pending",
             nullable=False,
         ),
+        sa.Column("owner_id", sa.Integer(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -86,11 +74,7 @@ def upgrade() -> None:
             nullable=True,
         ),
         sa.ForeignKeyConstraint(
-            ["recipient_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["sender_id"],
+            ["owner_id"],
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
