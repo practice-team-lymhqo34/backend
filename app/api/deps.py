@@ -50,3 +50,12 @@ async def get_current_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     return user
+
+
+def require_roles(*roles: UserRole):
+    async def dependency(current_user=Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(status_code=403, detail="Access denied")
+        return current_user
+
+    return dependency
