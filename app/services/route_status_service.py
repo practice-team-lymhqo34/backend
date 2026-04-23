@@ -27,7 +27,6 @@ class RouteStatusService:
         latest = await crud_route_status.get_latest_status(db, route_id)
         current = latest.status if latest else None
 
-        # failed можна виставити з будь-якого стану крім delivered
         if status_in.status == RouteStatusEnum.FAILED:
             if current == RouteStatusEnum.DELIVERED:
                 raise HTTPException(

@@ -37,7 +37,10 @@ async def get_current_user(
     return user
 
 
-async def require_sender(user=Depends(get_current_user)):
-    if user.role != UserRole.SENDER:
-        raise HTTPException(status_code=403, detail="Sender role required")
-    return user
+def require_roles(*roles: UserRole):
+    async def dependency(current_user=Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(status_code=403, detail="Access denied")
+        return current_user
+
+    return dependency
