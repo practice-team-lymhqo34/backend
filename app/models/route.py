@@ -1,7 +1,10 @@
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlmodel import Column, DateTime, Field, SQLModel
+from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.models.delivery_photo import DeliveryPhoto
 
 
 class Route(SQLModel, table=True):
@@ -21,3 +24,6 @@ class Route(SQLModel, table=True):
     completed_at: Optional[datetime] = Field(
         sa_column=Column(DateTime(timezone=True), nullable=True)
     )
+
+
+photos: List["DeliveryPhoto"] = Relationship(back_populates="route")

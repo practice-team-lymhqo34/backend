@@ -15,6 +15,7 @@ from app.enums import UserRole
 
 if TYPE_CHECKING:
     from app.models.order import Order
+    from app.models.vehicle import Vehicle
 
 
 class User(SQLModel, table=True):
@@ -35,3 +36,4 @@ class User(SQLModel, table=True):
     )
 
     orders: List["Order"] = Relationship(back_populates="owner")
+    vehicle: Optional["Vehicle"] = Relationship(back_populates="driver")
