@@ -1,9 +1,20 @@
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlmodel import Column, DateTime, Enum, Field, SQLModel, func
+from sqlmodel import (
+    Column,
+    DateTime,
+    Enum,
+    Field,
+    Relationship,
+    SQLModel,
+    func,
+)
 
 from app.enums import UserRole
+
+if TYPE_CHECKING:
+    from app.models.order import Order
 
 
 class User(SQLModel, table=True):
@@ -22,3 +33,5 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
+
+    orders: List["Order"] = Relationship(back_populates="owner")
