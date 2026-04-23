@@ -4,7 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
 
-app = FastAPI(title="LogiFlow")
+app = FastAPI(
+    title="LogiFlow",
+    openapi_url="/openapi.json" if settings.DEBUG else None,
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+)
 
 if settings.CORS_ORIGINS:
     app.add_middleware(
