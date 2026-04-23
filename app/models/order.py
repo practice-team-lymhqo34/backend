@@ -1,30 +1,34 @@
 from datetime import datetime
-from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Column, DateTime, Enum, Field, SQLModel, func
+from sqlalchemy import Enum
+from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.enums import OrderStatus
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class Order(SQLModel, table=True):
     __tablename__ = "orders"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-
-    sender_id: Optional[int] = Field(default=None, foreign_key="users.id")
-    recipient_id: Optional[int] = Field(default=None, foreign_key="users.id")
-
-    name: str = Field(max_length=50, nullable=False)
-    is_template: bool = Field(default=False)
-
-    origin_address: str = Field(max_length=150, nullable=False)
-    destination_address: str = Field(max_length=150, nullable=False)
-    distance: Decimal = Field(max_digits=10, decimal_places=3, nullable=False)
-
+    title: str = Field(nullable=False)
+    description: Optional[str] = Field(default=None)
+    weight: float = Field(nullable=False)
     status: OrderStatus = Field(
-        sa_column=Column(Enum(OrderStatus, native_enum=False), nullable=False)
+        sa_column=Column(
+            Enum(OrderStatus, native_enum=False),
+            nullable=False,
+            server_default=OrderStatus.PENDING,
+        ),
+        default=OrderStatus.PENDING,
     )
+
+    owner_id: int = Field(foreign_key="users.id", nullable=False)
+
+    owner: Optional["User"] = Relationship(back_populates="orders")
 
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now())

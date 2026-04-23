@@ -20,3 +20,4 @@ class RouteStatusEnum(enum.StrEnum):
     IN_TRANSIT = "in_transit"
     DELIVERED = "delivered"
     FAILED = "failed"
+    CANCELLED = "cancelled"
