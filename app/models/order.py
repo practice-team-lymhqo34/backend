@@ -1,7 +1,10 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
+from sqlalchemy import Enum
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
+
+from app.enums import OrderStatus
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -14,7 +17,14 @@ class Order(SQLModel, table=True):
     title: str = Field(nullable=False)
     description: Optional[str] = Field(default=None)
     weight: float = Field(nullable=False)
-    status: str = Field(default="pending")
+    status: OrderStatus = Field(
+        sa_column=Column(
+            Enum(OrderStatus, native_enum=False),
+            nullable=False,
+            server_default=OrderStatus.PENDING,
+        ),
+        default=OrderStatus.PENDING,
+    )
 
     owner_id: int = Field(foreign_key="users.id", nullable=False)
 

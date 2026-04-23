@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
+from app.enums import OrderStatus
 from app.models.order import Order
 from app.models.user import User
 from app.schemas.order import OrderCreate, OrderOut
@@ -17,7 +18,9 @@ async def create_order(
     current_user: User = Depends(deps.get_current_user),
 ):
     db_order = Order(
-        **order_in.model_dump(), owner_id=current_user.id, status="pending"
+        **order_in.model_dump(),
+        owner_id=current_user.id,
+        status=OrderStatus.PENDING,
     )
 
     db.add(db_order)

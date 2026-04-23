@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from app.enums import OrderStatus
+
 
 class OrderCreate(BaseModel):
     title: str = Field(
@@ -17,7 +19,7 @@ class OrderCreate(BaseModel):
 class OrderOut(OrderCreate):
     id: int
     owner_id: int
-    status: str
+    status: OrderStatus
     created_at: datetime
 
     class Config:

@@ -1,7 +1,7 @@
 """add_orders_table
 
 Revision ID: e34be2f7c332
-Revises: f9b03fec5dde
+Revises: a283d016c91f
 Create Date: 2026-04-22 19:04:08.281614
 
 """
@@ -14,7 +14,7 @@ import sqlmodel
 from alembic import op
 
 revision: str = "e34be2f7c332"
-down_revision: Union[str, Sequence[str], None] = "f9b03fec5dde"
+down_revision: Union[str, Sequence[str], None] = "a283d016c91f"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -25,12 +25,19 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("title", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.Column("weight", sa.Float(), nullable=False),
         sa.Column(
             "status",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.Enum(
+                "pending",
+                "in_progress",
+                "completed",
+                "cancelled",
+                name="orderstatus",
+                native_enum=False,
+            ),
             server_default="pending",
             nullable=False,
         ),
