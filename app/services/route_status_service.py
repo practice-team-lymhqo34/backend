@@ -5,7 +5,6 @@ from app.crud import route_status as crud_route_status
 from app.enums import RouteStatusEnum
 from app.schemas.route_status import RouteStatusCreate
 
-# Дозволена послідовність переходів
 ALLOWED_TRANSITIONS: dict[RouteStatusEnum | None, RouteStatusEnum] = {
     None: RouteStatusEnum.ASSIGNED,
     RouteStatusEnum.ASSIGNED: RouteStatusEnum.LOADED,
