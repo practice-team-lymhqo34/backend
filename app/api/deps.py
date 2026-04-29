@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.db.session import SessionLocal
+from app.enums import UserRole
 from app.models.user import User
 from app.services.user_service import user_service
 
@@ -49,3 +50,12 @@ async def get_current_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     return user
+
+
+def require_roles(*roles: UserRole):
+    async def dependency(current_user=Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(status_code=403, detail="Access denied")
+        return current_user
+
+    return dependency
