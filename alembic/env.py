@@ -7,14 +7,25 @@ from sqlmodel import SQLModel
 
 from alembic import context
 from app.core.config import settings
+from app.models.delivery_photo import DeliveryPhoto
 from app.models.notification import Notification
 from app.models.order import Order
 from app.models.route import Route
 from app.models.route_status import RouteStatus
 from app.models.shipment import Shipment
 from app.models.user import User
+from app.models.vehicle import Vehicle
 
-_ = User, Order, Route, RouteStatus, Shipment, Notification
+_ = (
+    User,
+    Order,
+    Route,
+    RouteStatus,
+    Shipment,
+    Notification,
+    Vehicle,
+    DeliveryPhoto,
+)
 
 config = context.config
 
