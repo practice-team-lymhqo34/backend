@@ -1,11 +1,12 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
-from app.enums import OrderStatus
-from app.models.order import Order
 from app.models.user import User
 from app.schemas.order import OrderCreate, OrderOut
+from app.services.order_service import order_service
 
 router = APIRouter()
 
@@ -17,14 +18,18 @@ async def create_order(
     order_in: OrderCreate,
     current_user: User = Depends(deps.get_current_user),
 ):
-    db_order = Order(
-        **order_in.model_dump(),
-        owner_id=current_user.id,
-        status=OrderStatus.PENDING,
+    return await order_service.create_order(
+        db, order_in=order_in, owner_id=current_user.id
     )
 
-    db.add(db_order)
-    await db.commit()
-    await db.refresh(db_order)
 
-    return db_order
+@router.get("/", response_model=list[OrderOut])
+async def get_orders(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+    is_template: Optional[bool] = None,
+):
+    return await order_service.get_orders(
+        db, owner_id=current_user.id, is_template=is_template
+    )
