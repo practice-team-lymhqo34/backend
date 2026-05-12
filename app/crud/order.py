@@ -1,4 +1,4 @@
-from typing import Any, Optional, Sequence
+from typing import Optional, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,16 +15,13 @@ async def get_order_by_id(db: AsyncSession, order_id: int) -> Optional[Order]:
 
 async def get_orders(
     db: AsyncSession,
-    sender_id: Optional[int] = None,
-    recipient_id: Optional[int] = None,
+    owner_id: Optional[int] = None,
     status: Optional[OrderStatus] = None,
     is_template: Optional[bool] = None,
-) -> Sequence[Any]:
+) -> Sequence[Order]:
     query = select(Order)
-    if sender_id is not None:
-        query = query.where(Order.sender_id == sender_id)
-    if recipient_id is not None:
-        query = query.where(Order.recipient_id == recipient_id)
+    if owner_id is not None:
+        query = query.where(Order.owner_id == owner_id)
     if status is not None:
         query = query.where(Order.status == status)
     if is_template is not None:
@@ -34,16 +31,11 @@ async def get_orders(
 
 
 async def create_order(
-    db: AsyncSession, order_in: OrderCreate, sender_id: int
+    db: AsyncSession, order_in: OrderCreate, owner_id: int
 ) -> Order:
     db_order = Order(
-        sender_id=sender_id,
-        recipient_id=order_in.recipient_id,
-        name=order_in.name,
-        origin_address=order_in.origin_address,
-        destination_address=order_in.destination_address,
-        distance=order_in.distance,
-        is_template=order_in.is_template,
+        **order_in.model_dump(),
+        owner_id=owner_id,
         status=OrderStatus.PENDING,
     )
     db.add(db_order)

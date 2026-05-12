@@ -17,19 +17,19 @@ class OrderService:
         return await crud_order.get_orders(db, **filters)
 
     async def create_order(
-        self, db: AsyncSession, order_in: OrderCreate, sender_id: int
+        self, db: AsyncSession, order_in: OrderCreate, owner_id: int
     ):
-        return await crud_order.create_order(db, order_in, sender_id)
+        return await crud_order.create_order(db, order_in, owner_id)
 
     async def update_order(
         self,
         db: AsyncSession,
         order_id: int,
         order_in: OrderUpdate,
-        sender_id: int,
+        owner_id: int,
     ):
         order = await self.get_order_or_404(db, order_id)
-        if order.sender_id != sender_id:
+        if order.owner_id != owner_id:
             raise HTTPException(status_code=403, detail="Access denied")
         if order.status == OrderStatus.IN_PROGRESS:
             raise HTTPException(
@@ -38,10 +38,10 @@ class OrderService:
         return await crud_order.update_order(db, order, order_in)
 
     async def delete_order(
-        self, db: AsyncSession, order_id: int, sender_id: int
+        self, db: AsyncSession, order_id: int, owner_id: int
     ):
         order = await self.get_order_or_404(db, order_id)
-        if order.sender_id != sender_id:
+        if order.owner_id != owner_id:
             raise HTTPException(status_code=403, detail="Access denied")
         if order.status != OrderStatus.PENDING:
             raise HTTPException(
