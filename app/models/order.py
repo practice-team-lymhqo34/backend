@@ -27,6 +27,7 @@ class Order(SQLModel, table=True):
     )
 
     owner_id: int = Field(foreign_key="users.id", nullable=False)
+    is_template: bool = Field(default=False, nullable=False)
 
     owner: Optional["User"] = Relationship(back_populates="orders")
 
