@@ -41,6 +41,45 @@ async def test_create_order(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_create_order_template(client: AsyncClient):
+    login_data = {
+        "email": "order_owner@example.com",
+        "password": "password123",
+    }
+    await client.post("/api/v1/auth/login", json=login_data)
+
+    order_payload = {
+        "title": "Шаблон замовлення",
+        "description": "Це шаблон для регулярної доставки",
+        "weight": 100.0,
+        "is_template": True,
+    }
+
+    response = await client.post("/api/v1/orders/", json=order_payload)
+
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["title"] == order_payload["title"]
+    assert data["is_template"] is True
+
+
+@pytest.mark.asyncio
+async def test_get_order_templates(client: AsyncClient):
+    login_data = {
+        "email": "order_owner@example.com",
+        "password": "password123",
+    }
+    await client.post("/api/v1/auth/login", json=login_data)
+
+    response = await client.get("/api/v1/orders/?is_template=true")
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+    for order in data:
+        assert order["is_template"] is True
+
+
+@pytest.mark.asyncio
 async def test_create_order_unauthorized(client: AsyncClient):
     order_payload = {"title": "Спроба без логіну", "weight": 10.0}
     response = await client.post("/api/v1/orders/", json=order_payload)
