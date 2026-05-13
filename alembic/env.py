@@ -8,6 +8,7 @@ from sqlmodel import SQLModel
 from alembic import context
 from app.core.config import settings
 from app.models.delivery_photo import DeliveryPhoto
+from app.models.invoice import Invoice
 from app.models.notification import Notification
 from app.models.order import Order
 from app.models.route import Route
@@ -25,6 +26,7 @@ _ = (
     Notification,
     Vehicle,
     DeliveryPhoto,
+    Invoice,
 )
 
 config = context.config

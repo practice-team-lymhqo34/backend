@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -6,13 +7,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db, require_roles
 from app.enums import OrderStatus, UserRole
 from app.schemas.delivery_photo import DeliveryPhotoOut, DeliveryPhotoUploadOut
+from app.schemas.invoice import InvoiceCreate, InvoiceOut
 from app.schemas.notification import NotificationOut
-from app.schemas.order import OrderOut
+from app.schemas.order import OrderCreate, OrderOut, OrderUpdate
 from app.schemas.route import RouteCreate, RouteOut, RouteUpdate
 from app.schemas.route_status import RouteStatusCreate, RouteStatusOut
-from app.schemas.shipment import ShipmentOut
+from app.schemas.shipment import ShipmentCreate, ShipmentOut
 from app.schemas.vehicle import VehicleCreate, VehicleOut, VehicleUpdate
 from app.services.delivery_photo_service import delivery_photo_service
+from app.services.invoice_service import invoice_service
 from app.services.notification_service import notification_service
 from app.services.order_service import order_service
 from app.services.route_service import route_service
@@ -28,11 +31,11 @@ async def get_orders(
     status: Optional[OrderStatus] = None,
     is_template: Optional[bool] = None,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.CLIENT)),
+    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
     return await order_service.get_orders(
         db,
-        sender_id=current_user.id,
+        owner_id=current_user.id,
         status=status,
         is_template=is_template,
     )
@@ -42,12 +45,71 @@ async def get_orders(
 async def get_order(
     order_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.CLIENT)),
+    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
     order = await order_service.get_order_or_404(db, order_id)
-    if order.sender_id != current_user.id:
+    if order.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     return order
+
+
+@router.post("/orders", response_model=OrderOut, status_code=201)
+async def create_order(
+    order_in: OrderCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
+):
+    return await order_service.create_order(
+        db, order_in, owner_id=current_user.id
+    )
+
+
+@router.patch("/orders/{order_id}", response_model=OrderOut)
+async def update_order(
+    order_id: int,
+    order_in: OrderUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
+):
+    return await order_service.update_order(
+        db, order_id, order_in, owner_id=current_user.id
+    )
+
+
+@router.delete("/orders/{order_id}", status_code=204)
+async def delete_order(
+    order_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
+):
+    await order_service.delete_order(db, order_id, owner_id=current_user.id)
+
+
+@router.post(
+    "/orders/from-template/{order_id}",
+    response_model=OrderOut,
+    status_code=201,
+)
+async def create_order_from_template(
+    order_id: int,
+    scheduled_date: datetime,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.MANAGER)),
+):
+    template = await order_service.get_order_or_404(db, order_id)
+    if template.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if not template.is_template:
+        raise HTTPException(status_code=422, detail="Order is not a template")
+    order_in = OrderCreate(
+        title=template.title,
+        description=template.description,
+        weight=template.weight,
+        is_template=False,
+    )
+    return await order_service.create_order(
+        db, order_in, owner_id=current_user.id
+    )
 
 
 @router.post("/routes", response_model=RouteOut, status_code=201)
@@ -73,22 +135,41 @@ async def update_route(
 async def get_shipments(
     order_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    current_user=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     order = await order_service.get_order_or_404(db, order_id)
     if (
-        current_user.role == UserRole.CLIENT
-        and order.sender_id != current_user.id
+        current_user.role in [UserRole.CLIENT, UserRole.MANAGER]
+        and order.owner_id != current_user.id
     ):
         raise HTTPException(status_code=403, detail="Access denied")
     return await shipment_service.get_shipments_by_order(db, order_id)
+
+
+@router.post(
+    "/orders/{order_id}/shipments", response_model=ShipmentOut, status_code=201
+)
+async def add_shipment_to_order(
+    order_id: int,
+    shipment_in: ShipmentCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.MANAGER)),
+):
+    order = await order_service.get_order_or_404(db, order_id)
+    if order.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return await shipment_service.create_shipment(db, order_id, shipment_in)
 
 
 @router.get("/routes", response_model=list[RouteOut])
 async def get_routes(
     order_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    current_user=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     driver_id = (
         current_user.id if current_user.role == UserRole.DRIVER else None
@@ -102,7 +183,9 @@ async def get_routes(
 async def get_route(
     route_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    current_user=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     route = await route_service.get_route_or_404(db, route_id)
     if (
@@ -117,7 +200,9 @@ async def get_route(
 async def get_route_statuses(
     route_id: int,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    _=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     await route_service.get_route_or_404(db, route_id)
     return await route_status_service.get_statuses(db, route_id)
@@ -127,7 +212,9 @@ async def get_route_statuses(
 async def get_route_current_status(
     route_id: int,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    _=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     await route_service.get_route_or_404(db, route_id)
     statuses = await route_status_service.get_statuses(db, route_id)
@@ -140,7 +227,9 @@ async def get_route_current_status(
 async def get_route_eta(
     route_id: int,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    _=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     route = await route_service.get_route_or_404(db, route_id)
     return {"eta": route.eta}
@@ -150,7 +239,9 @@ async def get_route_eta(
 async def get_route_photos(
     route_id: int,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    _=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     await route_service.get_route_or_404(db, route_id)
     return await delivery_photo_service.get_route_photos(db, route_id)
@@ -160,7 +251,9 @@ async def get_route_photos(
 async def get_notifications(
     is_read: Optional[bool] = None,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    current_user=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     return await notification_service.get_notifications(
         db, user_id=current_user.id, is_read=is_read
@@ -170,7 +263,9 @@ async def get_notifications(
 @router.patch("/notifications/read-all")
 async def mark_all_notifications_read(
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    current_user=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     updated = await notification_service.mark_all_as_read(
         db, user_id=current_user.id
@@ -184,11 +279,56 @@ async def mark_all_notifications_read(
 async def mark_notification_read(
     notification_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.CLIENT, UserRole.DRIVER)),
+    current_user=Depends(
+        require_roles(UserRole.CLIENT, UserRole.DRIVER, UserRole.MANAGER)
+    ),
 ):
     return await notification_service.mark_as_read(
         db, notification_id, user_id=current_user.id
     )
+
+
+@router.get("/invoices", response_model=list[InvoiceOut])
+async def get_manager_invoices(
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.MANAGER)),
+):
+    return await invoice_service.get_invoices(
+        db,
+        owner_id=current_user.id,
+    )
+
+
+@router.get("/invoices/{invoice_id}", response_model=InvoiceOut)
+async def get_manager_invoice(
+    invoice_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.MANAGER)),
+):
+    invoice = await invoice_service.get_invoice_or_404(db, invoice_id)
+    if invoice.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return invoice
+
+
+@router.post("/invoices", response_model=InvoiceOut, status_code=201)
+async def create_manager_invoice(
+    invoice_in: InvoiceCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.MANAGER)),
+):
+    # Check if invoice already exists for this recipient and month
+    # This logic should ideally be in service, but adding here as requested
+    invoices = await invoice_service.get_invoices(db, owner_id=current_user.id)
+    for inv in invoices:
+        if inv.billing_month == invoice_in.billing_month:
+            raise HTTPException(
+                status_code=409,
+                detail="Invoice already exists for this period",
+            )
+
+    invoice_in.owner_id = current_user.id
+    return await invoice_service.create_invoice(db, invoice_in)
 
 
 @router.post(
