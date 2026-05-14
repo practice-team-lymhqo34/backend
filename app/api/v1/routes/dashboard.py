@@ -116,7 +116,7 @@ async def create_order_from_template(
 async def create_route(
     route_in: RouteCreate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(UserRole.CLIENT)),
+    _=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
     return await route_service.create_route(db, route_in)
 
@@ -126,7 +126,7 @@ async def update_route(
     route_id: int,
     route_in: RouteUpdate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(UserRole.CLIENT)),
+    _=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
     return await route_service.update_route(db, route_id, route_in)
 
@@ -177,6 +177,14 @@ async def get_routes(
     return await route_service.get_routes(
         db, order_id=order_id, driver_id=driver_id
     )
+
+
+@router.get("/routes/today", response_model=list[RouteOut])
+async def get_today_routes(
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.DRIVER)),
+):
+    return await route_service.get_today_routes(db, driver_id=current_user.id)
 
 
 @router.get("/routes/{route_id}", response_model=RouteOut)
