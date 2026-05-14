@@ -35,9 +35,12 @@ async def get_orders(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
+    owner_id = (
+        current_user.id if current_user.role == UserRole.CLIENT else None
+    )
     return await order_service.get_orders(
         db,
-        owner_id=current_user.id,
+        owner_id=owner_id,
         status=status,
         is_template=is_template,
     )
