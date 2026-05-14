@@ -16,6 +16,12 @@ class OrderBase(BaseModel):
     description: Optional[str] = Field(
         None, json_schema_extra={"example": "Привезти 10 мішків цементу"}
     )
+    origin_address: Optional[str] = Field(
+        None, json_schema_extra={"example": "Київ, вул. Хрещатик, 1"}
+    )
+    destination_address: Optional[str] = Field(
+        None, json_schema_extra={"example": "Львів, вул. Зелена, 10"}
+    )
     weight: float = Field(..., gt=0, json_schema_extra={"example": 50.5})
     is_template: bool = Field(default=False)
 

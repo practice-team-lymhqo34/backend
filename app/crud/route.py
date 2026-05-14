@@ -3,6 +3,7 @@ from typing import Optional, Sequence
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from sqlmodel import col
 
 from app.models.route import Route
@@ -10,7 +11,11 @@ from app.schemas.route import RouteCreate, RouteUpdate
 
 
 async def get_route_by_id(db: AsyncSession, route_id: int) -> Optional[Route]:
-    result = await db.execute(select(Route).where(col(Route.id) == route_id))
+    result = await db.execute(
+        select(Route)
+        .where(col(Route.id) == route_id)
+        .options(joinedload(Route.order))
+    )
     return result.scalars().first()
 
 
@@ -18,7 +23,9 @@ async def get_route_by_order_id(
     db: AsyncSession, order_id: int
 ) -> Optional[Route]:
     result = await db.execute(
-        select(Route).where(col(Route.order_id) == order_id)
+        select(Route)
+        .where(col(Route.order_id) == order_id)
+        .options(joinedload(Route.order))
     )
     return result.scalars().first()
 
@@ -28,7 +35,7 @@ async def get_routes(
     driver_id: Optional[int] = None,
     order_id: Optional[int] = None,
 ) -> Sequence[Route]:
-    query = select(Route)
+    query = select(Route).options(joinedload(Route.order))
     if driver_id is not None:
         query = query.where(col(Route.driver_id) == driver_id)
     if order_id is not None:
@@ -41,9 +48,13 @@ async def get_today_routes_by_driver(
     db: AsyncSession, driver_id: int
 ) -> Sequence[Route]:
     today = date.today()
-    query = select(Route).where(
-        col(Route.driver_id) == driver_id,
-        func.date(Route.eta) == today,
+    query = (
+        select(Route)
+        .where(
+            col(Route.driver_id) == driver_id,
+            func.date(Route.eta) == today,
+        )
+        .options(joinedload(Route.order))
     )
     result = await db.execute(query)
     return result.scalars().all()
