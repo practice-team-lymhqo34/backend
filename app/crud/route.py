@@ -69,6 +69,12 @@ async def create_route(db: AsyncSession, route_in: RouteCreate) -> Route:
     db.add(db_route)
     await db.commit()
     await db.refresh(db_route)
+
+    await db.execute(
+        select(Route)
+        .where(Route.id == db_route.id)
+        .options(joinedload(Route.order))
+    )
     return db_route
 
 
@@ -81,6 +87,12 @@ async def update_route(
     db.add(route)
     await db.commit()
     await db.refresh(route)
+
+    await db.execute(
+        select(Route)
+        .where(Route.id == route.id)
+        .options(joinedload(Route.order))
+    )
     return route
 
 
