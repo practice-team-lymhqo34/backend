@@ -1,6 +1,7 @@
+from datetime import date
 from typing import Optional, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 
@@ -32,6 +33,18 @@ async def get_routes(
         query = query.where(col(Route.driver_id) == driver_id)
     if order_id is not None:
         query = query.where(col(Route.order_id) == order_id)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+async def get_today_routes_by_driver(
+    db: AsyncSession, driver_id: int
+) -> Sequence[Route]:
+    today = date.today()
+    query = select(Route).where(
+        col(Route.driver_id) == driver_id,
+        func.date(Route.eta) == today,
+    )
     result = await db.execute(query)
     return result.scalars().all()
 

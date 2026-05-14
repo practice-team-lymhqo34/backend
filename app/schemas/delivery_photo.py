@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DeliveryPhotoCreate(BaseModel):
@@ -15,8 +15,7 @@ class DeliveryPhotoOut(BaseModel):
     description: Optional[str]
     taken: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DeliveryPhotoUploadOut(BaseModel):

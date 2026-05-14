@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.enums import UserRole
 
@@ -11,7 +11,9 @@ class UserCreate(BaseModel):
     password: str
     full_name: str
     role: UserRole
-    phone_number: str = Field(..., example="+380991234567")
+    phone_number: str = Field(
+        ..., json_schema_extra={"example": "+380991234567"}
+    )
 
 
 class UserLogin(BaseModel):
@@ -28,5 +30,4 @@ class UserOut(BaseModel):
     phone_number: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

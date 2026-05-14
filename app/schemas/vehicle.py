@@ -1,12 +1,14 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class VehicleCreate(BaseModel):
     brand: str = Field(..., max_length=50)
     model: str = Field(..., max_length=50)
-    license_plate: str = Field(..., max_length=8, example="AA1234BP")
+    license_plate: str = Field(
+        ..., max_length=8, json_schema_extra={"example": "AA1234BP"}
+    )
     max_weight: float = Field(..., gt=0)
     max_volume: float = Field(..., gt=0)
     fuel_consumption: float = Field(..., gt=0)
@@ -32,5 +34,4 @@ class VehicleOut(BaseModel):
     current_mileage: int
     maintenance_interval: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

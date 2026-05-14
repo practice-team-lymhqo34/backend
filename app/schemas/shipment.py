@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ShipmentCreate(BaseModel):
@@ -26,5 +26,4 @@ class ShipmentOut(BaseModel):
     quantity: int
     description: Optional[str]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
