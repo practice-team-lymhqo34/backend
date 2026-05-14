@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.enums import UserRole
+from app.schemas.vehicle import VehicleOut
 
 
 class UserCreate(BaseModel):
@@ -29,5 +30,6 @@ class UserOut(BaseModel):
     full_name: str
     phone_number: str
     created_at: datetime
+    vehicle: Optional[VehicleOut] = None
 
     model_config = ConfigDict(from_attributes=True)

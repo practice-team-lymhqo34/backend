@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
+from app.enums import UserRole
 from app.models.user import User
 from app.schemas.order import OrderCreate, OrderOut
 from app.services.order_service import order_service
@@ -30,6 +31,9 @@ async def get_orders(
     current_user: User = Depends(deps.get_current_user),
     is_template: Optional[bool] = None,
 ):
+    owner_id = (
+        current_user.id if current_user.role == UserRole.CLIENT else None
+    )
     return await order_service.get_orders(
-        db, owner_id=current_user.id, is_template=is_template
+        db, owner_id=owner_id, is_template=is_template
     )

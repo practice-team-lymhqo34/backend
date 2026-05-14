@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.order import OrderOut
+
 
 class RouteCreate(BaseModel):
     order_id: int
@@ -24,5 +26,6 @@ class RouteOut(BaseModel):
     started_at: Optional[datetime]
     eta: datetime
     completed_at: Optional[datetime]
+    order: Optional[OrderOut] = None
 
     model_config = ConfigDict(from_attributes=True)

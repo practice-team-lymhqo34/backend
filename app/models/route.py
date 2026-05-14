@@ -5,6 +5,7 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.models.delivery_photo import DeliveryPhoto
+    from app.models.order import Order
 
 
 class Route(SQLModel, table=True):
@@ -25,4 +26,5 @@ class Route(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=True)
     )
 
+    order: "Order" = Relationship()
     photos: List["DeliveryPhoto"] = Relationship(back_populates="route")

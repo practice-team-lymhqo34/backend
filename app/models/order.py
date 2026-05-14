@@ -16,6 +16,8 @@ class Order(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str = Field(nullable=False)
     description: Optional[str] = Field(default=None)
+    origin_address: Optional[str] = Field(default=None)
+    destination_address: Optional[str] = Field(default=None)
     weight: float = Field(nullable=False)
     status: OrderStatus = Field(
         sa_column=Column(
