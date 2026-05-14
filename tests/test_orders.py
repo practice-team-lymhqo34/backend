@@ -42,6 +42,15 @@ async def test_create_order(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_create_order_template(client: AsyncClient):
+    user_payload = {
+        "email": "order_owner@example.com",
+        "password": "password123",
+        "full_name": "Order Owner",
+        "role": UserRole.CLIENT,
+        "phone_number": "+380990001122",
+    }
+    await client.post("/api/v1/auth/register", json=user_payload)
+
     login_data = {
         "email": "order_owner@example.com",
         "password": "password123",
@@ -65,6 +74,15 @@ async def test_create_order_template(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_order_templates(client: AsyncClient):
+    user_payload = {
+        "email": "order_owner@example.com",
+        "password": "password123",
+        "full_name": "Order Owner",
+        "role": UserRole.CLIENT,
+        "phone_number": "+380990001122",
+    }
+    await client.post("/api/v1/auth/register", json=user_payload)
+
     login_data = {
         "email": "order_owner@example.com",
         "password": "password123",
