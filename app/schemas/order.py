@@ -1,19 +1,22 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.enums import OrderStatus
 
 
 class OrderBase(BaseModel):
     title: str = Field(
-        ..., min_length=3, max_length=100, example="Доставка будматеріалів"
+        ...,
+        min_length=3,
+        max_length=100,
+        json_schema_extra={"example": "Доставка будматеріалів"},
     )
     description: Optional[str] = Field(
-        None, example="Привезти 10 мішків цементу"
+        None, json_schema_extra={"example": "Привезти 10 мішків цементу"}
     )
-    weight: float = Field(..., gt=0, example=50.5)
+    weight: float = Field(..., gt=0, json_schema_extra={"example": 50.5})
     is_template: bool = Field(default=False)
 
 
@@ -35,5 +38,4 @@ class OrderOut(OrderBase):
     status: OrderStatus
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
