@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
+from app.enums import UserRole
 from app.models.user import User
 from app.schemas.user import UserCreate
 
@@ -14,6 +15,11 @@ async def get_user_by_email(db: AsyncSession, email: str):
 async def get_user_by_phone(db: AsyncSession, phone: str):
     result = await db.execute(select(User).where(User.phone_number == phone))
     return result.scalars().first()
+
+
+async def get_users_by_role(db: AsyncSession, role: UserRole):
+    result = await db.execute(select(User).where(User.role == role))
+    return result.scalars().all()
 
 
 async def create_user(db: AsyncSession, user_in: UserCreate):

@@ -13,6 +13,7 @@ from app.schemas.order import OrderCreate, OrderOut, OrderUpdate
 from app.schemas.route import RouteCreate, RouteOut, RouteUpdate
 from app.schemas.route_status import RouteStatusCreate, RouteStatusOut
 from app.schemas.shipment import ShipmentCreate, ShipmentOut
+from app.schemas.user import UserOut
 from app.schemas.vehicle import VehicleCreate, VehicleOut, VehicleUpdate
 from app.services.delivery_photo_service import delivery_photo_service
 from app.services.invoice_service import invoice_service
@@ -21,6 +22,7 @@ from app.services.order_service import order_service
 from app.services.route_service import route_service
 from app.services.route_status_service import route_status_service
 from app.services.shipment_service import shipment_service
+from app.services.user_service import user_service
 from app.services.vehicle_service import vehicle_service
 
 router = APIRouter()
@@ -33,9 +35,12 @@ async def get_orders(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
+    owner_id = (
+        current_user.id if current_user.role == UserRole.CLIENT else None
+    )
     return await order_service.get_orders(
         db,
-        owner_id=current_user.id,
+        owner_id=owner_id,
         status=status,
         is_template=is_template,
     )
@@ -297,37 +302,44 @@ async def mark_notification_read(
 
 
 @router.get("/invoices", response_model=list[InvoiceOut])
-async def get_manager_invoices(
+async def get_invoices(
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.MANAGER)),
+    current_user=Depends(require_roles(UserRole.MANAGER, UserRole.CLIENT)),
 ):
+    owner_id = (
+        current_user.id if current_user.role == UserRole.CLIENT else None
+    )
     return await invoice_service.get_invoices(
         db,
-        owner_id=current_user.id,
+        owner_id=owner_id,
     )
 
 
 @router.get("/invoices/{invoice_id}", response_model=InvoiceOut)
-async def get_manager_invoice(
+async def get_invoice(
     invoice_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_roles(UserRole.MANAGER)),
+    current_user=Depends(require_roles(UserRole.MANAGER, UserRole.CLIENT)),
 ):
     invoice = await invoice_service.get_invoice_or_404(db, invoice_id)
-    if invoice.owner_id != current_user.id:
+    if (
+        current_user.role == UserRole.CLIENT
+        and invoice.owner_id != current_user.id
+    ):
         raise HTTPException(status_code=403, detail="Access denied")
     return invoice
 
 
 @router.post("/invoices", response_model=InvoiceOut, status_code=201)
-async def create_manager_invoice(
+async def create_invoice(
     invoice_in: InvoiceCreate,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_roles(UserRole.MANAGER)),
 ):
     # Check if invoice already exists for this recipient and month
-    # This logic should ideally be in service, but adding here as requested
-    invoices = await invoice_service.get_invoices(db, owner_id=current_user.id)
+    invoices = await invoice_service.get_invoices(
+        db, owner_id=invoice_in.owner_id
+    )
     for inv in invoices:
         if inv.billing_month == invoice_in.billing_month:
             raise HTTPException(
@@ -335,7 +347,6 @@ async def create_manager_invoice(
                 detail="Invoice already exists for this period",
             )
 
-    invoice_in.owner_id = current_user.id
     return await invoice_service.create_invoice(db, invoice_in)
 
 
@@ -424,3 +435,11 @@ async def delete_vehicle(
     current_user=Depends(require_roles(UserRole.DRIVER)),
 ):
     await vehicle_service.remove_vehicle(db, vehicle_id, current_user)
+
+
+@router.get("/drivers", response_model=list[UserOut])
+async def get_drivers(
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_roles(UserRole.MANAGER, UserRole.CLIENT)),
+):
+    return await user_service.get_users_by_role(db, role=UserRole.DRIVER)

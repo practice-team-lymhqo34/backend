@@ -18,11 +18,15 @@ async def get_orders(
     owner_id: Optional[int] = None,
     status: Optional[OrderStatus] = None,
     is_template: Optional[bool] = None,
+    all_pending: bool = False,
 ) -> Sequence[Order]:
     query = select(Order)
-    if owner_id is not None:
+    if all_pending:
+        query = query.where(Order.status == OrderStatus.PENDING)
+    elif owner_id is not None:
         query = query.where(Order.owner_id == owner_id)
-    if status is not None:
+
+    if status is not None and not all_pending:
         query = query.where(Order.status == status)
     if is_template is not None:
         query = query.where(Order.is_template == is_template)

@@ -33,5 +33,8 @@ class UserService:
     async def get_user_by_email(self, db: AsyncSession, email: str):
         return await crud_user.get_user_by_email(db, email=email)
 
+    async def get_users_by_role(self, db: AsyncSession, role: str):
+        return await crud_user.get_users_by_role(db, role=role)
+
 
 user_service = UserService()
