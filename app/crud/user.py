@@ -35,6 +35,15 @@ async def get_users_by_role(db: AsyncSession, role: UserRole):
     return result.scalars().all()
 
 
+async def get_user_by_id(db: AsyncSession, user_id: int):
+    result = await db.execute(
+        select(User)
+        .where(User.id == user_id)
+        .options(selectinload(User.vehicle))
+    )
+    return result.scalars().first()
+
+
 async def create_user(db: AsyncSession, user_in: UserCreate):
     db_user = User(
         email=user_in.email,

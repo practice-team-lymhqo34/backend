@@ -1,9 +1,11 @@
+from datetime import datetime
 from typing import Sequence
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import route as crud_route
+from app.enums import UserRole
 from app.models.route import Route
 from app.schemas.route import RouteCreate, RouteUpdate
 
@@ -34,6 +36,27 @@ class RouteService:
                 status_code=409, detail="Route already exists for this order"
             )
         return await crud_route.create_route(db, route_in)
+
+    async def assign_order_to_driver(
+        self, db: AsyncSession, order_id: int, driver_id: int, eta: datetime
+    ) -> Route:
+        from app.services.user_service import user_service
+
+        driver = await user_service.get_user_by_id(db, driver_id)
+        if not driver or driver.role != UserRole.DRIVER:
+            raise HTTPException(status_code=404, detail="Driver not found")
+
+        existing_route = await crud_route.get_route_by_order_id(db, order_id)
+        if existing_route:
+            return await crud_route.update_route(
+                db,
+                existing_route,
+                RouteUpdate(driver_id=driver_id, eta=eta),
+            )
+
+        return await crud_route.create_route(
+            db, RouteCreate(order_id=order_id, driver_id=driver_id, eta=eta)
+        )
 
     async def update_route(
         self, db: AsyncSession, route_id: int, route_in: RouteUpdate

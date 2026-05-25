@@ -38,6 +38,11 @@ class OrderUpdate(BaseModel):
     is_template: Optional[bool] = None
 
 
+class OrderAssign(BaseModel):
+    driver_id: int
+    eta: datetime
+
+
 class OrderOut(OrderBase):
     id: int
     owner_id: int
