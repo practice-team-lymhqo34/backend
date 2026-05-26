@@ -104,3 +104,42 @@ async def test_create_order_unauthorized(client: AsyncClient):
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json()["detail"] == "Not authenticated"
+
+
+@pytest.mark.asyncio
+async def test_confirm_order_receipt(client: AsyncClient):
+    user_payload = {
+        "email": "confirm_test@example.com",
+        "password": "password123",
+        "full_name": "Confirm Tester",
+        "role": UserRole.CLIENT,
+        "phone_number": "+380990001133",
+    }
+    await client.post("/api/v1/auth/register", json=user_payload)
+    login_data = {
+        "email": "confirm_test@example.com",
+        "password": "password123",
+    }
+    await client.post("/api/v1/auth/login", json=login_data)
+
+    order_payload = {"title": "Test Confirmation", "weight": 50.0}
+    create_response = await client.post("/api/v1/orders/", json=order_payload)
+    order_id = create_response.json()["id"]
+
+    fail_confirm = await client.post(f"/api/v1/orders/{order_id}/confirm")
+    assert fail_confirm.status_code == status.HTTP_409_CONFLICT
+
+    await client.patch(
+        f"/api/v1/orders/{order_id}", json={"status": OrderStatus.IN_PROGRESS}
+    )
+
+    confirm_response = await client.post(f"/api/v1/orders/{order_id}/confirm")
+    assert confirm_response.status_code == status.HTTP_200_OK
+    data = confirm_response.json()
+    assert data["status"] == OrderStatus.COMPLETED
+    assert data["received_at"] is not None
+
+    reconfirm_response = await client.post(
+        f"/api/v1/orders/{order_id}/confirm"
+    )
+    assert reconfirm_response.status_code == status.HTTP_409_CONFLICT
