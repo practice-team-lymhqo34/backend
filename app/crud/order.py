@@ -1,6 +1,6 @@
 from typing import Optional, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import OrderStatus
@@ -63,3 +63,12 @@ async def update_order(
 async def delete_order(db: AsyncSession, order: Order) -> None:
     await db.delete(order)
     await db.commit()
+
+
+async def confirm_order_receipt(db: AsyncSession, order: Order) -> Order:
+    order.status = OrderStatus.COMPLETED
+    order.received_at = func.now()
+    db.add(order)
+    await db.commit()
+    await db.refresh(order)
+    return order

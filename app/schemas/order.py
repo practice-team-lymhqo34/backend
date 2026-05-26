@@ -48,5 +48,6 @@ class OrderOut(OrderBase):
     owner_id: int
     status: OrderStatus
     created_at: datetime
+    received_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
