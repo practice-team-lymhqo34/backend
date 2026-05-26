@@ -9,7 +9,7 @@ from app.enums import OrderStatus, UserRole
 from app.schemas.delivery_photo import DeliveryPhotoOut, DeliveryPhotoUploadOut
 from app.schemas.invoice import InvoiceCreate, InvoiceOut
 from app.schemas.notification import NotificationOut
-from app.schemas.order import OrderCreate, OrderOut, OrderUpdate
+from app.schemas.order import OrderAssign, OrderCreate, OrderOut, OrderUpdate
 from app.schemas.route import RouteCreate, RouteOut, RouteUpdate
 from app.schemas.route_status import RouteStatusCreate, RouteStatusOut
 from app.schemas.shipment import ShipmentCreate, ShipmentOut
@@ -114,6 +114,22 @@ async def create_order_from_template(
     )
     return await order_service.create_order(
         db, order_in, owner_id=current_user.id
+    )
+
+
+@router.post("/orders/{order_id}/assign", response_model=RouteOut)
+async def assign_order_to_driver(
+    order_id: int,
+    assign_in: OrderAssign,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.MANAGER)),
+):
+    await order_service.get_order_or_404(db, order_id)
+    return await route_service.assign_order_to_driver(
+        db,
+        order_id=order_id,
+        driver_id=assign_in.driver_id,
+        eta=assign_in.eta,
     )
 
 
