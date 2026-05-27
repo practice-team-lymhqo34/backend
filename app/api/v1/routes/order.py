@@ -62,7 +62,7 @@ async def update_order(
     current_user: User = Depends(deps.get_current_user),
 ):
     return await order_service.update_order(
-        db, order_id=order_id, order_in=order_in, owner_id=current_user.id
+        db, order_id=order_id, order_in=order_in, current_user=current_user
     )
 
 
@@ -73,7 +73,7 @@ async def delete_order(
     current_user: User = Depends(deps.get_current_user),
 ):
     await order_service.delete_order(
-        db, order_id=order_id, owner_id=current_user.id
+        db, order_id=order_id, current_user=current_user
     )
 
 
@@ -85,5 +85,5 @@ async def confirm_order_receipt(
 ):
 
     return await order_service.confirm_receipt(
-        db, order_id=order_id, owner_id=current_user.id
+        db, order_id=order_id, current_user=current_user
     )
