@@ -1,0 +1,169 @@
+from datetime import datetime, timedelta
+
+import pytest
+from fastapi import status
+from httpx import AsyncClient
+
+from app.enums import OrderStatus, RouteStatusEnum, UserRole
+
+
+@pytest.mark.asyncio
+async def test_manager_access_to_any_order(client: AsyncClient):
+    # 1. Create a client and an order
+    client_reg = {
+        "email": "client@example.com",
+        "password": "password123",
+        "full_name": "Client User",
+        "role": UserRole.CLIENT,
+        "phone_number": "+380990001144",
+    }
+    await client.post("/api/v1/auth/register", json=client_reg)
+    await client.post(
+        "/api/v1/auth/login",
+        json={"email": "client@example.com", "password": "password123"},
+    )
+
+    order_resp = await client.post(
+        "/api/v1/orders/", json={"title": "Client Order", "weight": 10.0}
+    )
+    order_id = order_resp.json()["id"]
+
+    await client.post("/api/v1/auth/logout")
+
+    # 2. Create a manager and try to access the client's order
+    manager_reg = {
+        "email": "manager@example.com",
+        "password": "password123",
+        "full_name": "Manager User",
+        "role": UserRole.MANAGER,
+        "phone_number": "+380990001155",
+    }
+    await client.post("/api/v1/auth/register", json=manager_reg)
+    await client.post(
+        "/api/v1/auth/login",
+        json={"email": "manager@example.com", "password": "password123"},
+    )
+
+    # Check GET
+    get_resp = await client.get(f"/api/v1/dashboard/orders/{order_id}")
+    assert get_resp.status_code == status.HTTP_200_OK
+    assert get_resp.json()["id"] == order_id
+
+    # Check UPDATE
+    patch_resp = await client.patch(
+        f"/api/v1/dashboard/orders/{order_id}",
+        json={"title": "Updated by Manager"},
+    )
+    assert patch_resp.status_code == status.HTTP_200_OK
+    assert patch_resp.json()["title"] == "Updated by Manager"
+
+
+@pytest.mark.asyncio
+async def test_cancel_order_in_progress(client: AsyncClient):
+    # Register and login manager
+    manager_reg = {
+        "email": "manager2@example.com",
+        "password": "password123",
+        "full_name": "Manager User 2",
+        "role": UserRole.MANAGER,
+        "phone_number": "+380990001156",
+    }
+    await client.post("/api/v1/auth/register", json=manager_reg)
+    await client.post(
+        "/api/v1/auth/login",
+        json={"email": "manager2@example.com", "password": "password123"},
+    )
+
+    # 2. Create an order and set to IN_PROGRESS
+    order_resp = await client.post(
+        "/api/v1/orders/", json={"title": "Cancel Test", "weight": 20.0}
+    )
+    assert order_resp.status_code == status.HTTP_201_CREATED
+    order_id = order_resp.json()["id"]
+
+    await client.patch(
+        f"/api/v1/orders/{order_id}", json={"status": OrderStatus.IN_PROGRESS}
+    )
+
+    # 3. Try to cancel (should be allowed now)
+    cancel_resp = await client.patch(
+        f"/api/v1/orders/{order_id}", json={"status": OrderStatus.CANCELED}
+    )
+    assert cancel_resp.status_code == status.HTTP_200_OK
+    assert cancel_resp.json()["status"] == OrderStatus.CANCELED
+
+
+@pytest.mark.asyncio
+async def test_route_sync_order_status(client: AsyncClient):
+    # Register and login manager
+    manager_reg = {
+        "email": "manager3@example.com",
+        "password": "password123",
+        "full_name": "Manager User 3",
+        "role": UserRole.MANAGER,
+        "phone_number": "+380990001157",
+    }
+    await client.post("/api/v1/auth/register", json=manager_reg)
+    await client.post(
+        "/api/v1/auth/login",
+        json={"email": "manager3@example.com", "password": "password123"},
+    )
+
+    driver_reg = {
+        "email": "driver2@example.com",
+        "password": "password123",
+        "full_name": "Driver User 2",
+        "role": UserRole.DRIVER,
+        "phone_number": "+380990001167",
+    }
+    driver_resp = await client.post("/api/v1/auth/register", json=driver_reg)
+    driver_id = driver_resp.json()["id"]
+
+    order_resp = await client.post(
+        "/api/v1/orders/", json={"title": "Sync Test", "weight": 30.0}
+    )
+    assert order_resp.status_code == status.HTTP_201_CREATED
+    order_id = order_resp.json()["id"]
+
+    eta = (datetime.now() + timedelta(days=1)).isoformat()
+    assign_resp = await client.post(
+        f"/api/v1/dashboard/orders/{order_id}/assign",
+        json={"driver_id": driver_id, "eta": eta},
+    )
+    route_id = assign_resp.json()["id"]
+
+    await client.post("/api/v1/auth/logout")
+
+    # 2. Driver updates route status to IN_TRANSIT
+    await client.post(
+        "/api/v1/auth/login",
+        json={"email": "driver2@example.com", "password": "password123"},
+    )
+
+    # ASSIGNED -> LOADED -> IN_TRANSIT
+    await client.post(
+        f"/api/v1/dashboard/routes/{route_id}/statuses",
+        json={"status": RouteStatusEnum.ASSIGNED},
+    )
+    await client.post(
+        f"/api/v1/dashboard/routes/{route_id}/statuses",
+        json={"status": RouteStatusEnum.LOADED},
+    )
+    await client.post(
+        f"/api/v1/dashboard/routes/{route_id}/statuses",
+        json={"status": RouteStatusEnum.IN_TRANSIT},
+    )
+
+    # 3. Check if order status is now IN_PROGRESS
+    order_check = await client.get(f"/api/v1/orders/{order_id}")
+    assert order_check.json()["status"] == OrderStatus.IN_PROGRESS
+
+    # 4. Driver updates to DELIVERED
+    await client.post(
+        f"/api/v1/dashboard/routes/{route_id}/statuses",
+        json={"status": RouteStatusEnum.DELIVERED},
+    )
+
+    # 5. Check if order status is now COMPLETED
+    order_check2 = await client.get(f"/api/v1/orders/{order_id}")
+    assert order_check2.json()["status"] == OrderStatus.COMPLETED
