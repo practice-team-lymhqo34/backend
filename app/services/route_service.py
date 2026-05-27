@@ -40,7 +40,7 @@ class RouteService:
     async def assign_order_to_driver(
         self, db: AsyncSession, order_id: int, driver_id: int, eta: datetime
     ) -> Route:
-        from app.services.user_service import user_service
+        from app.services.user_service import user_service  # noqa: PLC0415
 
         driver = await user_service.get_user_by_id(db, driver_id)
         if not driver or driver.role != UserRole.DRIVER:

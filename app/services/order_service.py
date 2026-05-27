@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import order as crud_order
-from app.enums import OrderStatus
+from app.enums import OrderStatus, UserRole
 from app.schemas.order import OrderCreate, OrderUpdate
 
 logger = logging.getLogger(__name__)
@@ -33,25 +33,36 @@ class OrderService:
         db: AsyncSession,
         order_id: int,
         order_in: OrderUpdate,
-        owner_id: int,
+        current_user,
     ):
-
         order = await self.get_order_or_404(db, order_id)
-        if order.owner_id != owner_id:
+
+        if (
+            current_user.role == UserRole.CLIENT
+            and order.owner_id != current_user.id
+        ):
             raise HTTPException(status_code=403, detail="Access denied")
-        if order.status == OrderStatus.IN_PROGRESS:
+
+        if (
+            order.status == OrderStatus.IN_PROGRESS
+            and order_in.status != OrderStatus.CANCELED
+        ):
             raise HTTPException(
                 status_code=409, detail="Order is already in progress"
             )
         return await crud_order.update_order(db, order, order_in)
 
     async def delete_order(
-        self, db: AsyncSession, order_id: int, owner_id: int
+        self, db: AsyncSession, order_id: int, current_user
     ):
-
         order = await self.get_order_or_404(db, order_id)
-        if order.owner_id != owner_id:
+
+        if (
+            current_user.role == UserRole.CLIENT
+            and order.owner_id != current_user.id
+        ):
             raise HTTPException(status_code=403, detail="Access denied")
+
         if order.status != OrderStatus.PENDING:
             raise HTTPException(
                 status_code=409, detail="Only pending orders can be deleted"
@@ -59,14 +70,16 @@ class OrderService:
         await crud_order.delete_order(db, order)
 
     async def confirm_receipt(
-        self, db: AsyncSession, order_id: int, owner_id: int
+        self, db: AsyncSession, order_id: int, current_user
     ):
-
         order = await self.get_order_or_404(db, order_id)
 
-        if order.owner_id != owner_id:
+        if (
+            current_user.role == UserRole.CLIENT
+            and order.owner_id != current_user.id
+        ):
             logger.warning(
-                f"Unauthorized confirmation attempt: user {owner_id} "
+                f"Unauthorized confirmation attempt: user {current_user.id} "
                 f"on order {order_id}"
             )
             raise HTTPException(status_code=403, detail="Access denied")
@@ -89,7 +102,9 @@ class OrderService:
 
         updated_order = await crud_order.confirm_order_receipt(db, order)
 
-        logger.info(f"Order {order_id} receipt confirmed by user {owner_id}")
+        logger.info(
+            f"Order {order_id} receipt confirmed by user {current_user.id}"
+        )
         return updated_order
 
 
