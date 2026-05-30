@@ -53,7 +53,10 @@ async def get_order(
     current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
     order = await order_service.get_order_or_404(db, order_id)
-    if order.owner_id != current_user.id:
+    if (
+        current_user.role == UserRole.CLIENT
+        and order.owner_id != current_user.id
+    ):
         raise HTTPException(status_code=403, detail="Access denied")
     return order
 
@@ -77,7 +80,7 @@ async def update_order(
     current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
     return await order_service.update_order(
-        db, order_id, order_in, owner_id=current_user.id
+        db, order_id, order_in, current_user=current_user
     )
 
 
@@ -87,7 +90,7 @@ async def delete_order(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_roles(UserRole.CLIENT, UserRole.MANAGER)),
 ):
-    await order_service.delete_order(db, order_id, owner_id=current_user.id)
+    await order_service.delete_order(db, order_id, current_user=current_user)
 
 
 @router.post(
@@ -102,7 +105,10 @@ async def create_order_from_template(
     current_user=Depends(require_roles(UserRole.MANAGER)),
 ):
     template = await order_service.get_order_or_404(db, order_id)
-    if template.owner_id != current_user.id:
+    if (
+        current_user.role == UserRole.CLIENT
+        and template.owner_id != current_user.id
+    ):
         raise HTTPException(status_code=403, detail="Access denied")
     if not template.is_template:
         raise HTTPException(status_code=422, detail="Order is not a template")
@@ -162,7 +168,7 @@ async def get_shipments(
 ):
     order = await order_service.get_order_or_404(db, order_id)
     if (
-        current_user.role in [UserRole.CLIENT, UserRole.MANAGER]
+        current_user.role == UserRole.CLIENT
         and order.owner_id != current_user.id
     ):
         raise HTTPException(status_code=403, detail="Access denied")
@@ -178,9 +184,7 @@ async def add_shipment_to_order(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_roles(UserRole.MANAGER)),
 ):
-    order = await order_service.get_order_or_404(db, order_id)
-    if order.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
+    await order_service.get_order_or_404(db, order_id)
     return await shipment_service.create_shipment(db, order_id, shipment_in)
 
 
@@ -352,7 +356,6 @@ async def create_invoice(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_roles(UserRole.MANAGER)),
 ):
-    # Check if invoice already exists for this recipient and month
     invoices = await invoice_service.get_invoices(
         db, owner_id=invoice_in.owner_id
     )

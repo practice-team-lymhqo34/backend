@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud import order as crud_order
 from app.crud import route_status as crud_route_status
-from app.enums import RouteStatusEnum
+from app.enums import OrderStatus, RouteStatusEnum
+from app.schemas.order import OrderUpdate
 from app.schemas.route import RouteUpdate
 from app.schemas.route_status import RouteStatusCreate
 
@@ -59,13 +61,23 @@ class RouteStatusService:
         from app.services.route_service import route_service  # noqa: PLC0415
 
         route_update = None
+        order_update = None
+
         if status_in.status == RouteStatusEnum.IN_TRANSIT:
             route_update = RouteUpdate(started_at=datetime.now())
+            order_update = OrderUpdate(status=OrderStatus.IN_PROGRESS)
         elif status_in.status == RouteStatusEnum.DELIVERED:
             route_update = RouteUpdate(completed_at=datetime.now())
+            order_update = OrderUpdate(status=OrderStatus.COMPLETED)
 
         if route_update:
-            await route_service.update_route(db, route_id, route_update)
+            updated_route = await route_service.update_route(
+                db, route_id, route_update
+            )
+            if order_update:
+                await crud_order.update_order(
+                    db, updated_route.order, order_update
+                )
 
         return new_status
 
