@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db, require_roles
 from app.enums import OrderStatus, UserRole
 from app.schemas.delivery_photo import DeliveryPhotoOut, DeliveryPhotoUploadOut
-from app.schemas.invoice import InvoiceCreate, InvoiceOut
+from app.schemas.invoice import InvoiceCreate, InvoiceOut, MonthlyExpenseStat
 from app.schemas.notification import NotificationOut
 from app.schemas.order import OrderAssign, OrderCreate, OrderOut, OrderUpdate
 from app.schemas.route import RouteCreate, RouteOut, RouteUpdate
@@ -348,6 +348,17 @@ async def get_invoice(
     ):
         raise HTTPException(status_code=403, detail="Access denied")
     return invoice
+
+
+@router.get("/statistics/monthly", response_model=list[MonthlyExpenseStat])
+async def get_monthly_statistics(
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.MANAGER, UserRole.CLIENT)),
+):
+    owner_id = (
+        current_user.id if current_user.role == UserRole.CLIENT else None
+    )
+    return await invoice_service.get_monthly_statistics(db, owner_id=owner_id)
 
 
 @router.post("/invoices", response_model=InvoiceOut, status_code=201)
