@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,6 +34,11 @@ class InvoiceService:
     async def delete_invoice(self, db: AsyncSession, invoice_id: int):
         invoice = await self.get_invoice_or_404(db, invoice_id)
         await crud_invoice.delete_invoice(db, invoice)
+
+    async def get_monthly_statistics(
+        self, db: AsyncSession, owner_id: Optional[int] = None
+    ):
+        return await crud_invoice.get_monthly_statistics(db, owner_id)
 
 
 invoice_service = InvoiceService()

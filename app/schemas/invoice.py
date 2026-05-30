@@ -31,3 +31,12 @@ class InvoiceOut(InvoiceBase):
     generated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MonthlyExpenseStat(BaseModel):
+    month: datetime
+    total_shipments: int
+    total_weight: float
+    total_volume: float
+    total_distance: float
+    invoice_count: int
