@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud import vehicle as crud_vehicle
 from app.models.user import User
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate
+from app.services.notification_service import notification_service
 
 
 class VehicleService:
@@ -40,6 +41,8 @@ class VehicleService:
         vehicle = await self.get_vehicle_or_404(db, vehicle_id)
         self._check_ownership(vehicle, current_user)
 
+        old_mileage = vehicle.current_mileage
+
         if data.current_mileage is not None:
             if data.current_mileage < vehicle.current_mileage:
                 raise HTTPException(
@@ -47,7 +50,26 @@ class VehicleService:
                     detail="New mileage cannot be less than current mileage",
                 )
 
-        return await crud_vehicle.update_vehicle(db, vehicle, data)
+        updated_vehicle = await crud_vehicle.update_vehicle(db, vehicle, data)
+
+        if data.current_mileage is not None:
+            new_mileage = data.current_mileage
+            interval = updated_vehicle.maintenance_interval
+
+            if interval > 0:
+                old_count = old_mileage // interval
+                new_count = new_mileage // interval
+
+                if new_count > old_count and updated_vehicle.driver_id:
+                    message = (
+                        f"Vehicle {updated_vehicle.license_plate} requires "
+                        f"maintenance (passed {new_count * interval} km)."
+                    )
+                    await notification_service.create_notification(
+                        db, user_id=updated_vehicle.driver_id, message=message
+                    )
+
+        return updated_vehicle
 
     async def remove_vehicle(
         self, db: AsyncSession, vehicle_id: int, current_user: User

@@ -47,3 +47,13 @@ async def mark_all_as_read(db: AsyncSession, user_id: int) -> int:
     )
     await db.commit()
     return result.rowcount
+
+
+async def create_notification(
+    db: AsyncSession, user_id: int, message: str
+) -> Notification:
+    notification = Notification(user_id=user_id, message=message)
+    db.add(notification)
+    await db.commit()
+    await db.refresh(notification)
+    return notification
