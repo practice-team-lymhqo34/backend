@@ -34,5 +34,12 @@ class NotificationService:
     async def mark_all_as_read(self, db: AsyncSession, user_id: int) -> int:
         return await crud_notification.mark_all_as_read(db, user_id)
 
+    async def create_notification(
+        self, db: AsyncSession, user_id: int, message: str
+    ) -> Notification:
+        return await crud_notification.create_notification(
+            db, user_id, message
+        )
+
 
 notification_service = NotificationService()
