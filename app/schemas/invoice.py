@@ -11,6 +11,7 @@ class InvoiceBase(BaseModel):
     total_weight: float = 0.0
     total_volume: float = 0.0
     total_distance: float = 0.0
+    total_amount: float = 0.0
 
 
 class InvoiceCreate(InvoiceBase):
