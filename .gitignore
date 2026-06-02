@@ -15,6 +15,7 @@ env/
 *.env
 !.env.example
 !deployment/.env.db.example
+!deployment/.env.s3.example
 .flaskenv
 
 # Testing and coverage

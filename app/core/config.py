@@ -32,6 +32,13 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: Any = []
 
+    # S3 / MinIO Settings
+    S3_ENDPOINT_URL: str
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
+    S3_BUCKET_NAME: str
+    S3_REGION: str = "us-east-1"
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Any) -> List[str]:
