@@ -10,6 +10,8 @@ from app.enums import OrderStatus, RouteStatusEnum
 from app.schemas.order import OrderUpdate
 from app.schemas.route import RouteUpdate
 from app.schemas.route_status import RouteStatusCreate
+from app.services.invoice_service import invoice_service
+from app.services.route_service import route_service
 
 if TYPE_CHECKING:
     from app.models.route_status import RouteStatus
@@ -57,9 +59,6 @@ class RouteStatusService:
             db, route_id, status_in
         )
 
-        # Update route timestamps based on status
-        from app.services.route_service import route_service  # noqa: PLC0415
-
         route_update = None
         order_update = None
 
@@ -75,9 +74,16 @@ class RouteStatusService:
                 db, route_id, route_update
             )
             if order_update:
-                await crud_order.update_order(
+                updated_order = await crud_order.update_order(
                     db, updated_route.order, order_update
                 )
+                if updated_order.status == OrderStatus.COMPLETED:
+                    try:
+                        await invoice_service.add_order_to_invoice(
+                            db, updated_order
+                        )
+                    except Exception as e:
+                        print(f"Failed to update invoice: {e}")
 
         return new_status
 

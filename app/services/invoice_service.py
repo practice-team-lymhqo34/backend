@@ -36,9 +36,38 @@ class InvoiceService:
         await crud_invoice.delete_invoice(db, invoice)
 
     async def get_monthly_statistics(
-        self, db: AsyncSession, owner_id: Optional[int] = None
+        self,
+        db: AsyncSession,
+        owner_id: Optional[int] = None,
+        month: Optional[str] = None,
     ):
-        return await crud_invoice.get_monthly_statistics(db, owner_id)
+        return await crud_invoice.get_monthly_statistics(db, owner_id, month)
+
+    async def add_order_to_invoice(self, db: AsyncSession, order):
+        billing_month = order.created_at or order.received_at
+        invoice = await crud_invoice.get_invoice_by_month(
+            db, order.owner_id, billing_month
+        )
+
+        if not invoice:
+            month_start = billing_month.replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+            invoice_in = InvoiceCreate(
+                owner_id=order.owner_id,
+                billing_month=month_start,
+                total_shipment=1,
+                total_weight=order.weight,
+                total_amount=order.total_amount,
+            )
+            await crud_invoice.create_invoice(db, invoice_in)
+        else:
+            invoice_update = InvoiceUpdate(
+                total_shipment=invoice.total_shipment + 1,
+                total_weight=invoice.total_weight + order.weight,
+                total_amount=invoice.total_amount + order.total_amount,
+            )
+            await crud_invoice.update_invoice(db, invoice, invoice_update)
 
 
 invoice_service = InvoiceService()
