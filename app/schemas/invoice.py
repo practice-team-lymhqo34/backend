@@ -24,6 +24,7 @@ class InvoiceUpdate(BaseModel):
     total_weight: Optional[float] = None
     total_volume: Optional[float] = None
     total_distance: Optional[float] = None
+    total_amount: Optional[float] = None
 
 
 class InvoiceOut(InvoiceBase):
@@ -39,4 +40,5 @@ class MonthlyExpenseStat(BaseModel):
     total_weight: float
     total_volume: float
     total_distance: float
+    total_amount: float
     invoice_count: int
