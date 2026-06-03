@@ -52,6 +52,10 @@ async def update_order(
     db: AsyncSession, order: Order, order_in: OrderUpdate
 ) -> Order:
     update_data = order_in.model_dump(exclude_unset=True)
+
+    if update_data.get("status") == OrderStatus.COMPLETED:
+        order.received_at = func.now()
+
     for field, value in update_data.items():
         setattr(order, field, value)
     db.add(order)
