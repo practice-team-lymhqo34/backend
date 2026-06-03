@@ -21,7 +21,6 @@ services:
       - seaweedfs
     env_file:
       - ../.env
-      - .env.s3
     ports:
       - "8000:8000"
 
@@ -31,7 +30,6 @@ services:
     ports:
       - "8333:8333"    # S3 API
       - "8888:8888"    # Filer UI / API
-      - "9333:9333"    # Master UI
       - "23646:23646"
     command: "mini -dir=/data"
     volumes:
@@ -44,7 +42,7 @@ services:
     depends_on:
       - seaweedfs
     env_file:
-      - .env.s3
+      - ../.env
     environment:
       - AWS_ACCESS_KEY_ID=any
       - AWS_SECRET_ACCESS_KEY=any

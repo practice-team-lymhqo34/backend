@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY: str
     S3_SECRET_KEY: str
     S3_BUCKET_NAME: str
-    S3_REGION: str = "us-east-1"
+    S3_REGION: str
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
