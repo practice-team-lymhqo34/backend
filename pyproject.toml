@@ -14,6 +14,8 @@ dependencies = [
     "pyjwt>=2.12.1",
     "sqlmodel>=0.0.38",
     "uvicorn[standard]>=0.44.0",
+    "aioboto3>=15.5.0",
+    "botocore>=1.40.61",
 ]
 
 [dependency-groups]
