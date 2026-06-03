@@ -417,6 +417,15 @@ async def upload_route_photo(
     )
 
 
+@router.delete("/routes/photos/{photo_id}", status_code=204)
+async def delete_route_photo(
+    photo_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.DRIVER, UserRole.MANAGER)),
+):
+    await delivery_photo_service.delete_photo(db, photo_id, current_user)
+
+
 @router.get("/vehicles", response_model=list[VehicleOut])
 async def get_my_vehicles(
     db: AsyncSession = Depends(get_db),

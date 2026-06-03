@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.s3 import s3_client
 from app.crud import delivery_photo as crud_photo
+from app.enums import UserRole
 from app.models.user import User
 
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -49,6 +50,26 @@ class DeliveryPhotoService:
 
         url = await s3_client.get_presigned_url(key)
         return {"key": photo.key, "url": url}
+
+    async def delete_photo(self, db: AsyncSession, photo_id: int, current_user: User):
+        photo = await crud_photo.get_photo_by_id(db, photo_id)
+        if not photo:
+            raise HTTPException(status_code=404, detail="Photo not found")
+        
+        # Check permissions: only driver who uploaded it or manager can delete
+        # Note: DeliveryPhoto model has route_id, need to check route's driver_id
+        from app.services.route_service import route_service
+        route = await route_service.get_route_or_404(db, photo.route_id)
+        
+        if current_user.role != UserRole.MANAGER and route.driver_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this photo")
+
+        # Delete from S3
+        await s3_client.delete_file(photo.key)
+        
+        # Delete from DB
+        await crud_photo.delete_photo(db, photo)
+        return {"status": "deleted"}
 
     def _validate_file(self, file: UploadFile):
         if file.content_type not in ALLOWED_CONTENT_TYPES:

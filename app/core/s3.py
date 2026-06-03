@@ -1,5 +1,8 @@
 import aioboto3
+import logging
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 class S3Client:
     def __init__(self):
@@ -20,17 +23,29 @@ class S3Client:
         )
 
     async def upload_file(self, file_data: bytes, key: str, content_type: str = "image/jpeg"):
-        async with self.get_client() as s3:
-            await s3.put_object(
-                Bucket=self.bucket_name,
-                Key=key,
-                Body=file_data,
-                ContentType=content_type,
-            )
+        try:
+            async with self.get_client() as s3:
+                logger.info(f"Uploading file to S3: bucket={self.bucket_name}, key={key}")
+                response = await s3.put_object(
+                    Bucket=self.bucket_name,
+                    Key=key,
+                    Body=file_data,
+                    ContentType=content_type,
+                )
+                logger.info(f"S3 upload successful: {response}")
+                return response
+        except Exception as e:
+            logger.error(f"S3 upload failed: {str(e)}")
+            raise
 
     async def delete_file(self, key: str):
-        async with self.get_client() as s3:
-            await s3.delete_object(Bucket=self.bucket_name, Key=key)
+        try:
+            async with self.get_client() as s3:
+                await s3.delete_object(Bucket=self.bucket_name, Key=key)
+                logger.info(f"S3 file deleted: {key}")
+        except Exception as e:
+            logger.error(f"S3 delete failed: {str(e)}")
+            raise
 
     async def get_presigned_url(self, key: str, expires_in: int = 3600):
         async with self.get_client() as s3:
