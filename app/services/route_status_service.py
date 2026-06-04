@@ -67,7 +67,32 @@ class RouteStatusService:
             route_update = RouteUpdate(started_at=datetime.now())
             order_update = OrderUpdate(status=OrderStatus.IN_PROGRESS)
         elif status_in.status == RouteStatusEnum.DELIVERED:
-            route_update = RouteUpdate(completed_at=datetime.now())
+            fuel_cost = None
+            route = await route_service.get_route_or_404(db, route_id)
+
+            # Use the vehicle assigned by manager
+            vehicle = None
+            if route.vehicle_id:
+                from app.services.vehicle_service import vehicle_service
+                vehicle = await vehicle_service.get_vehicle_or_404(db, route.vehicle_id)
+            elif route.driver_id:
+                # Fallback for old routes without vehicle_id
+                from app.services.vehicle_service import vehicle_service
+                vehicles = await vehicle_service.get_driver_vehicles(db, route.driver_id)
+                if vehicles:
+                    vehicle = vehicles[0]
+
+            if vehicle:
+                fuel_cost = round(
+                    ((route.order.distance * vehicle.fuel_consumption) / 100)
+                    * vehicle.fuel_price,
+                    2,
+                )
+
+            route_update = RouteUpdate(
+                completed_at=datetime.now(),
+                fuel_cost=fuel_cost,
+            )
             order_update = OrderUpdate(status=OrderStatus.COMPLETED)
 
         if route_update:

@@ -21,6 +21,7 @@ class Vehicle(SQLModel, table=True):
     max_weight: float = Field(nullable=False)
     max_volume: float = Field(nullable=False)
     fuel_consumption: float = Field(nullable=False)
+    fuel_price: float = Field(nullable=False)
     current_mileage: int = Field(nullable=False)
     maintenance_interval: int = Field(nullable=False)
 

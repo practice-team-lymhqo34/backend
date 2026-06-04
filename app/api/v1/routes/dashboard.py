@@ -135,6 +135,7 @@ async def assign_order_to_driver(
         db,
         order_id=order_id,
         driver_id=assign_in.driver_id,
+        vehicle_id=assign_in.vehicle_id,
         eta=assign_in.eta,
     )
 
