@@ -31,6 +31,7 @@ async def test_update_vehicle_mileage_triggers_notification(
         max_weight=1000,
         max_volume=10,
         fuel_consumption=10,
+        fuel_price=50.0,
         current_mileage=9900,
         maintenance_interval=10000,
     )
@@ -46,6 +47,7 @@ async def test_update_vehicle_mileage_triggers_notification(
         max_weight=1000,
         max_volume=10,
         fuel_consumption=10,
+        fuel_price=50.0,
         current_mileage=10050,
         maintenance_interval=10000,
     )
@@ -91,6 +93,7 @@ async def test_update_vehicle_mileage_no_notification(mock_db, current_user):
         max_weight=1000,
         max_volume=10,
         fuel_consumption=10,
+        fuel_price=50.0,
         current_mileage=9900,
         maintenance_interval=10000,
     )
@@ -106,6 +109,7 @@ async def test_update_vehicle_mileage_no_notification(mock_db, current_user):
         max_weight=1000,
         max_volume=10,
         fuel_consumption=10,
+        fuel_price=50.0,
         current_mileage=9950,
         maintenance_interval=10000,
     )

@@ -23,7 +23,7 @@ async def test_manager_access_to_any_order(client: AsyncClient):
     )
 
     order_resp = await client.post(
-        "/api/v1/orders/", json={"title": "Client Order", "weight": 10.0}
+        "/api/v1/orders/", json={"title": "Client Order", "weight": 10.0, "distance": 100.0}
     )
     order_id = order_resp.json()["id"]
 
@@ -70,7 +70,7 @@ async def test_cancel_order_in_progress(client: AsyncClient):
     )
 
     order_resp = await client.post(
-        "/api/v1/orders/", json={"title": "Cancel Test", "weight": 20.0}
+        "/api/v1/orders/", json={"title": "Cancel Test", "weight": 20.0, "distance": 50.0}
     )
     assert order_resp.status_code == status.HTTP_201_CREATED
     order_id = order_resp.json()["id"]
@@ -112,7 +112,7 @@ async def test_route_sync_order_status(client: AsyncClient):
     driver_id = driver_resp.json()["id"]
 
     order_resp = await client.post(
-        "/api/v1/orders/", json={"title": "Sync Test", "weight": 30.0}
+        "/api/v1/orders/", json={"title": "Sync Test", "weight": 30.0, "distance": 150.0}
     )
     assert order_resp.status_code == status.HTTP_201_CREATED
     order_id = order_resp.json()["id"]

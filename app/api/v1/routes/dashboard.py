@@ -135,6 +135,7 @@ async def assign_order_to_driver(
         db,
         order_id=order_id,
         driver_id=assign_in.driver_id,
+        vehicle_id=assign_in.vehicle_id,
         eta=assign_in.eta,
     )
 
@@ -418,6 +419,15 @@ async def upload_route_photo(
     return await delivery_photo_service.upload_photo(
         db, route_id, file, description, current_user
     )
+
+
+@router.delete("/routes/photos/{photo_id}", status_code=204)
+async def delete_route_photo(
+    photo_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(require_roles(UserRole.DRIVER, UserRole.MANAGER)),
+):
+    await delivery_photo_service.delete_photo(db, photo_id, current_user)
 
 
 @router.get("/vehicles", response_model=list[VehicleOut])

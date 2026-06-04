@@ -26,6 +26,7 @@ async def test_create_order(client: AsyncClient):
         "title": "Доставка будматеріалів",
         "description": "Привезти 10 мішків цементу",
         "weight": 500.5,
+        "distance": 100.0,
     }
 
     response = await client.post("/api/v1/orders/", json=order_payload)
@@ -61,6 +62,7 @@ async def test_create_order_template(client: AsyncClient):
         "title": "Шаблон замовлення",
         "description": "Це шаблон для регулярної доставки",
         "weight": 100.0,
+        "distance": 50.0,
         "is_template": True,
     }
 
@@ -99,7 +101,7 @@ async def test_get_order_templates(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_create_order_unauthorized(client: AsyncClient):
-    order_payload = {"title": "Спроба без логіну", "weight": 10.0}
+    order_payload = {"title": "Спроба без логіну", "weight": 10.0, "distance": 10.0}
     response = await client.post("/api/v1/orders/", json=order_payload)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -122,7 +124,7 @@ async def test_confirm_order_receipt(client: AsyncClient):
     }
     await client.post("/api/v1/auth/login", json=login_data)
 
-    order_payload = {"title": "Test Confirmation", "weight": 50.0}
+    order_payload = {"title": "Test Confirmation", "weight": 50.0, "distance": 20.0}
     create_response = await client.post("/api/v1/orders/", json=order_payload)
     order_id = create_response.json()["id"]
 
