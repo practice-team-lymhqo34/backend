@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -36,9 +37,43 @@ class InvoiceService:
         await crud_invoice.delete_invoice(db, invoice)
 
     async def get_monthly_statistics(
-        self, db: AsyncSession, owner_id: Optional[int] = None
+        self,
+        db: AsyncSession,
+        owner_id: Optional[int] = None,
+        month: Optional[str] = None,
     ):
-        return await crud_invoice.get_monthly_statistics(db, owner_id)
+        return await crud_invoice.get_monthly_statistics(db, owner_id, month)
+
+    async def add_order_to_invoice(self, db: AsyncSession, order):
+        billing_month = order.received_at or order.created_at
+        if not billing_month:
+            billing_month = datetime.now(timezone.utc)
+
+        invoice = await crud_invoice.get_invoice_by_month(
+            db, order.owner_id, billing_month
+        )
+
+        if not invoice:
+            month_start = billing_month.replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+            invoice_in = InvoiceCreate(
+                owner_id=order.owner_id,
+                billing_month=month_start,
+                total_shipment=1,
+                total_weight=order.weight,
+                total_amount=order.total_amount,
+            )
+            await crud_invoice.create_invoice(db, invoice_in)
+        else:
+            invoice_update = InvoiceUpdate(
+                total_shipment=invoice.total_shipment + 1,
+                total_weight=float(invoice.total_weight or 0)
+                + float(order.weight or 0),
+                total_amount=float(invoice.total_amount or 0)
+                + float(order.total_amount or 0),
+            )
+            await crud_invoice.update_invoice(db, invoice, invoice_update)
 
 
 invoice_service = InvoiceService()
