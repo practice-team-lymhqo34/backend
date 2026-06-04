@@ -28,6 +28,11 @@ class Invoice(SQLModel, table=True):
         sa_column=Column(Numeric(10, 2), default=0.0)
     )
 
+    total_amount: float = Field(
+        sa_column=Column(Numeric(10, 2), default=0.0, nullable=False),
+        default=0.0,
+    )
+
     generated_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )

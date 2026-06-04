@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Numeric
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.enums import OrderStatus
@@ -31,6 +31,10 @@ class Order(SQLModel, table=True):
 
     owner_id: int = Field(foreign_key="users.id", nullable=False)
     is_template: bool = Field(default=False, nullable=False)
+    total_amount: float = Field(
+        sa_column=Column(Numeric(10, 2), default=0.0, nullable=False),
+        default=0.0,
+    )
 
     owner: Optional["User"] = Relationship(back_populates="orders")
 

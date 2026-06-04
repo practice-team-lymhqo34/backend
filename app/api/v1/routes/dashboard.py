@@ -353,13 +353,16 @@ async def get_invoice(
 
 @router.get("/statistics/monthly", response_model=list[MonthlyExpenseStat])
 async def get_monthly_statistics(
+    month: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_roles(UserRole.MANAGER, UserRole.CLIENT)),
 ):
     owner_id = (
         current_user.id if current_user.role == UserRole.CLIENT else None
     )
-    return await invoice_service.get_monthly_statistics(db, owner_id=owner_id)
+    return await invoice_service.get_monthly_statistics(
+        db, owner_id=owner_id, month=month
+    )
 
 
 @router.post("/invoices", response_model=InvoiceOut, status_code=201)
