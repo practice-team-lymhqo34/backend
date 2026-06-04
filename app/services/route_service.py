@@ -38,24 +38,44 @@ class RouteService:
         return await crud_route.create_route(db, route_in)
 
     async def assign_order_to_driver(
-        self, db: AsyncSession, order_id: int, driver_id: int, eta: datetime
+        self,
+        db: AsyncSession,
+        order_id: int,
+        driver_id: int,
+        vehicle_id: int,
+        eta: datetime,
     ) -> Route:
         from app.services.user_service import user_service  # noqa: PLC0415
+        from app.services.vehicle_service import vehicle_service  # noqa: PLC0415
 
         driver = await user_service.get_user_by_id(db, driver_id)
         if not driver or driver.role != UserRole.DRIVER:
             raise HTTPException(status_code=404, detail="Driver not found")
+
+        vehicle = await vehicle_service.get_vehicle_or_404(db, vehicle_id)
+        if vehicle.driver_id != driver_id:
+            raise HTTPException(
+                status_code=400, detail="Vehicle does not belong to this driver"
+            )
 
         existing_route = await crud_route.get_route_by_order_id(db, order_id)
         if existing_route:
             return await crud_route.update_route(
                 db,
                 existing_route,
-                RouteUpdate(driver_id=driver_id, eta=eta),
+                RouteUpdate(
+                    driver_id=driver_id, vehicle_id=vehicle_id, eta=eta
+                ),
             )
 
         return await crud_route.create_route(
-            db, RouteCreate(order_id=order_id, driver_id=driver_id, eta=eta)
+            db,
+            RouteCreate(
+                order_id=order_id,
+                driver_id=driver_id,
+                vehicle_id=vehicle_id,
+                eta=eta,
+            ),
         )
 
     async def update_route(

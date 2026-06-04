@@ -19,6 +19,7 @@ class Order(SQLModel, table=True):
     origin_address: Optional[str] = Field(default=None)
     destination_address: Optional[str] = Field(default=None)
     weight: float = Field(nullable=False)
+    distance: float = Field(nullable=False)
     status: OrderStatus = Field(
         sa_column=Column(
             Enum(OrderStatus, native_enum=False),

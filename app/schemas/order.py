@@ -23,6 +23,7 @@ class OrderBase(BaseModel):
         None, json_schema_extra={"example": "Львів, вул. Зелена, 10"}
     )
     weight: float = Field(..., gt=0, json_schema_extra={"example": 50.5})
+    distance: float = Field(..., gt=0, json_schema_extra={"example": 120.0})
     is_template: bool = Field(default=False)
 
 
@@ -34,12 +35,14 @@ class OrderUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=3, max_length=100)
     description: Optional[str] = None
     weight: Optional[float] = Field(None, gt=0)
+    distance: Optional[float] = Field(None, gt=0)
     status: Optional[OrderStatus] = None
     is_template: Optional[bool] = None
 
 
 class OrderAssign(BaseModel):
     driver_id: int
+    vehicle_id: int
     eta: datetime
 
 
