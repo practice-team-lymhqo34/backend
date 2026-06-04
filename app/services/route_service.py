@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Sequence
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.crud import route as crud_route
 from app.enums import UserRole
 from app.models.route import Route
@@ -16,6 +17,10 @@ class RouteService:
         if not route:
             raise HTTPException(status_code=404, detail="Route not found")
         return route
+
+    def calculate_eta(self, distance: float, start_time: datetime) -> datetime:
+        hours = distance / settings.AVERAGE_SPEED_KMH
+        return start_time + timedelta(hours=hours)
 
     async def get_routes(self, db: AsyncSession, **filters):
         return await crud_route.get_routes(db, **filters)
@@ -45,8 +50,11 @@ class RouteService:
         vehicle_id: int,
         eta: datetime,
     ) -> Route:
+        from app.services.order_service import order_service  # noqa: PLC0415
         from app.services.user_service import user_service  # noqa: PLC0415
         from app.services.vehicle_service import vehicle_service  # noqa: PLC0415
+
+        await order_service.get_order_or_404(db, order_id)
 
         driver = await user_service.get_user_by_id(db, driver_id)
         if not driver or driver.role != UserRole.DRIVER:
