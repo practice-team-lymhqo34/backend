@@ -25,3 +25,15 @@ async def create_photo(
     await db.commit()
     await db.refresh(db_photo)
     return db_photo
+
+
+async def get_photo_by_id(db: AsyncSession, photo_id: int) -> DeliveryPhoto | None:
+    result = await db.execute(
+        select(DeliveryPhoto).where(DeliveryPhoto.id == photo_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def delete_photo(db: AsyncSession, db_photo: DeliveryPhoto) -> None:
+    await db.delete(db_photo)
+    await db.commit()
