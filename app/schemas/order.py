@@ -40,6 +40,7 @@ class OrderUpdate(BaseModel):
     total_amount: Optional[float] = Field(None, gt=0)
     status: Optional[OrderStatus] = None
     is_template: Optional[bool] = None
+    received_at: Optional[datetime] = None
 
 
 class OrderAssign(BaseModel):

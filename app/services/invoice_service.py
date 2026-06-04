@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -44,7 +45,10 @@ class InvoiceService:
         return await crud_invoice.get_monthly_statistics(db, owner_id, month)
 
     async def add_order_to_invoice(self, db: AsyncSession, order):
-        billing_month = order.created_at or order.received_at
+        billing_month = order.received_at or order.created_at
+        if not billing_month:
+            billing_month = datetime.now(timezone.utc)
+
         invoice = await crud_invoice.get_invoice_by_month(
             db, order.owner_id, billing_month
         )
@@ -64,8 +68,10 @@ class InvoiceService:
         else:
             invoice_update = InvoiceUpdate(
                 total_shipment=invoice.total_shipment + 1,
-                total_weight=invoice.total_weight + order.weight,
-                total_amount=invoice.total_amount + order.total_amount,
+                total_weight=float(invoice.total_weight or 0)
+                + float(order.weight or 0),
+                total_amount=float(invoice.total_amount or 0)
+                + float(order.total_amount or 0),
             )
             await crud_invoice.update_invoice(db, invoice, invoice_update)
 

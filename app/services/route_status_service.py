@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
@@ -63,11 +63,14 @@ class RouteStatusService:
         order_update = None
 
         if status_in.status == RouteStatusEnum.IN_TRANSIT:
-            route_update = RouteUpdate(started_at=datetime.now())
+            route_update = RouteUpdate(started_at=datetime.now(timezone.utc))
             order_update = OrderUpdate(status=OrderStatus.IN_PROGRESS)
         elif status_in.status == RouteStatusEnum.DELIVERED:
-            route_update = RouteUpdate(completed_at=datetime.now())
-            order_update = OrderUpdate(status=OrderStatus.COMPLETED)
+            route_update = RouteUpdate(completed_at=datetime.now(timezone.utc))
+            order_update = OrderUpdate(
+                status=OrderStatus.COMPLETED,
+                received_at=datetime.now(timezone.utc),
+            )
 
         if route_update:
             updated_route = await route_service.update_route(

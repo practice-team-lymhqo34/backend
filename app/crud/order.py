@@ -53,7 +53,9 @@ async def update_order(
 ) -> Order:
     update_data = order_in.model_dump(exclude_unset=True)
 
-    if update_data.get("status") == OrderStatus.COMPLETED:
+    if update_data.get(
+        "status"
+    ) == OrderStatus.COMPLETED and not update_data.get("received_at"):
         order.received_at = func.now()
 
     for field, value in update_data.items():
