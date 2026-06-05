@@ -63,7 +63,10 @@ class RouteStatusService:
         order_update = None
 
         if status_in.status == RouteStatusEnum.IN_TRANSIT:
-            route_update = RouteUpdate(started_at=datetime.now(timezone.utc))
+            route = await route_service.get_route_or_404(db, route_id)
+            now = datetime.now()
+            new_eta = route_service.calculate_eta(route.order.distance, now)
+            route_update = RouteUpdate(started_at=now, eta=new_eta)
             order_update = OrderUpdate(status=OrderStatus.IN_PROGRESS)
         elif status_in.status == RouteStatusEnum.DELIVERED:
             route_update = RouteUpdate(completed_at=datetime.now(timezone.utc))

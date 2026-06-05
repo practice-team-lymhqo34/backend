@@ -32,6 +32,8 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: Any = []
 
+    AVERAGE_SPEED_KMH: float = 60.0
+
     # S3 / MinIO Settings
     S3_ENDPOINT_URL: str
     S3_ACCESS_KEY: str
