@@ -11,7 +11,7 @@
 
 ---
 
-## 🏗 Project Structure
+## Project Structure
 
 |Directory|Description|
 |---|---|
@@ -23,7 +23,7 @@
 
 ---
 
-## 🚀 Deployment Guide
+## Deployment Guide
 
 ### System Requirements
 
@@ -67,7 +67,7 @@ Documentation: `http://localhost:8000/docs`
 
 ---
 
-## 🔑 Test Credentials
+## Test Credentials
 
 For testing purposes, you can use the following accounts (register them first
 via `/api/v1/auth/register` if the database is fresh):
@@ -80,7 +80,7 @@ via `/api/v1/auth/register` if the database is fresh):
 
 ---
 
-## 🛠 Local Development
+## Local Development
 
 ### Prerequisites
 
@@ -109,7 +109,7 @@ uvicorn app.main:app --reload
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -118,7 +118,7 @@ uv run pytest
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the MIT License - see the
 [LICENSE](LICENSE) file for details.
