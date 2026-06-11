@@ -13,13 +13,20 @@
 
 ## Project Structure
 
-|Directory|Description|
-|---|---|
-|`app/`|Core backend application logic (FastAPI, Models, Services, API)|
-|`alembic/`|Database migration scripts and configuration|
-|`deployment/`|Docker Compose, Dockerfiles, and deployment configurations|
-|`tests/`|Comprehensive test suite (Unit and Integration tests)|
-|`frontend/`|(Planned) Frontend application location|
+| Directory/File | Description |
+| --- | --- |
+| `alembic/` | Database migration scripts and configuration |
+| `app/` | Core backend application logic |
+| `app/api/` | API endpoints and routes (v1) |
+| `app/core/` | Configuration, security, and cloud storage logic |
+| `app/crud/` | CRUD operations (Direct DB interaction) |
+| `app/db/` | Database session and connection management |
+| `app/models/` | SQLAlchemy database models |
+| `app/schemas/` | Pydantic schemas for data validation |
+| `app/services/` | Business logic layer (Service pattern) |
+| `app/main.py` | FastAPI application entry point |
+| `deployment/` | Docker Compose, Dockerfiles, and deployment configs |
+| `tests/` | Comprehensive test suite (Unit and Integration) |
 
 ---
 
@@ -115,10 +122,3 @@ uvicorn app.main:app --reload
 # Run all tests
 uv run pytest
 ```
-
----
-
-## License
-
-This project is licensed under the MIT License - see the
-[LICENSE](LICENSE) file for details.
