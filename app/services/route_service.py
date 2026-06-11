@@ -9,6 +9,11 @@ from app.crud import route as crud_route
 from app.enums import UserRole
 from app.models.route import Route
 from app.schemas.route import RouteCreate, RouteUpdate
+from app.services.order_service import order_service
+from app.services.user_service import user_service
+from app.services.vehicle_service import (
+    vehicle_service,
+)
 
 
 class RouteService:
@@ -50,9 +55,6 @@ class RouteService:
         vehicle_id: int,
         eta: datetime,
     ) -> Route:
-        from app.services.order_service import order_service  # noqa: PLC0415
-        from app.services.user_service import user_service  # noqa: PLC0415
-        from app.services.vehicle_service import vehicle_service  # noqa: PLC0415
 
         await order_service.get_order_or_404(db, order_id)
 
@@ -63,7 +65,8 @@ class RouteService:
         vehicle = await vehicle_service.get_vehicle_or_404(db, vehicle_id)
         if vehicle.driver_id != driver_id:
             raise HTTPException(
-                status_code=400, detail="Vehicle does not belong to this driver"
+                status_code=400,
+                detail="Vehicle does not belong to this driver",
             )
 
         existing_route = await crud_route.get_route_by_order_id(db, order_id)

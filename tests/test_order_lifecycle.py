@@ -23,7 +23,8 @@ async def test_manager_access_to_any_order(client: AsyncClient):
     )
 
     order_resp = await client.post(
-        "/api/v1/orders/", json={"title": "Client Order", "weight": 10.0, "distance": 100.0}
+        "/api/v1/orders/",
+        json={"title": "Client Order", "weight": 10.0, "distance": 100.0},
     )
     order_id = order_resp.json()["id"]
 
@@ -70,7 +71,8 @@ async def test_cancel_order_in_progress(client: AsyncClient):
     )
 
     order_resp = await client.post(
-        "/api/v1/orders/", json={"title": "Cancel Test", "weight": 20.0, "distance": 50.0}
+        "/api/v1/orders/",
+        json={"title": "Cancel Test", "weight": 20.0, "distance": 50.0},
     )
     assert order_resp.status_code == status.HTTP_201_CREATED
     order_id = order_resp.json()["id"]
@@ -111,8 +113,38 @@ async def test_route_sync_order_status(client: AsyncClient):
     driver_resp = await client.post("/api/v1/auth/register", json=driver_reg)
     driver_id = driver_resp.json()["id"]
 
+    # Login as driver to create a vehicle
+    await client.post("/api/v1/auth/logout")
+    await client.post(
+        "/api/v1/auth/login",
+        json={"email": "driver2@example.com", "password": "password123"},
+    )
+    vehicle_payload = {
+        "brand": "Ford",
+        "model": "Transit",
+        "license_plate": "AA1234BB",
+        "max_weight": 1000.0,
+        "max_volume": 10.0,
+        "fuel_consumption": 10.0,
+        "fuel_price": 50.0,
+        "current_mileage": 0,
+        "maintenance_interval": 10000,
+    }
+    veh_resp = await client.post(
+        "/api/v1/dashboard/vehicles", json=vehicle_payload
+    )
+    vehicle_id = veh_resp.json()["id"]
+
+    # Logout driver, login back as manager
+    await client.post("/api/v1/auth/logout")
+    await client.post(
+        "/api/v1/auth/login",
+        json={"email": "manager3@example.com", "password": "password123"},
+    )
+
     order_resp = await client.post(
-        "/api/v1/orders/", json={"title": "Sync Test", "weight": 30.0, "distance": 150.0}
+        "/api/v1/orders/",
+        json={"title": "Sync Test", "weight": 30.0, "distance": 150.0},
     )
     assert order_resp.status_code == status.HTTP_201_CREATED
     order_id = order_resp.json()["id"]
@@ -120,7 +152,7 @@ async def test_route_sync_order_status(client: AsyncClient):
     eta = (datetime.now() + timedelta(days=1)).isoformat()
     assign_resp = await client.post(
         f"/api/v1/dashboard/orders/{order_id}/assign",
-        json={"driver_id": driver_id, "eta": eta},
+        json={"driver_id": driver_id, "vehicle_id": vehicle_id, "eta": eta},
     )
     route_id = assign_resp.json()["id"]
 
