@@ -1,8 +1,11 @@
-import aioboto3
 import logging
+
+import aioboto3
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
 
 class S3Client:
     def __init__(self):
@@ -22,10 +25,15 @@ class S3Client:
             region_name=self.region,
         )
 
-    async def upload_file(self, file_data: bytes, key: str, content_type: str = "image/jpeg"):
+    async def upload_file(
+        self, file_data: bytes, key: str, content_type: str = "image/jpeg"
+    ):
         try:
             async with self.get_client() as s3:
-                logger.info(f"Uploading file to S3: bucket={self.bucket_name}, key={key}")
+                logger.info(
+                    f"Uploading file to S3: "
+                    f"bucket={self.bucket_name}, key={key}"
+                )
                 response = await s3.put_object(
                     Bucket=self.bucket_name,
                     Key=key,
@@ -54,5 +62,6 @@ class S3Client:
                 Params={"Bucket": self.bucket_name, "Key": key},
                 ExpiresIn=expires_in,
             )
+
 
 s3_client = S3Client()

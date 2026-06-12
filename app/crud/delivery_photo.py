@@ -27,7 +27,9 @@ async def create_photo(
     return db_photo
 
 
-async def get_photo_by_id(db: AsyncSession, photo_id: int) -> DeliveryPhoto | None:
+async def get_photo_by_id(
+    db: AsyncSession, photo_id: int
+) -> DeliveryPhoto | None:
     result = await db.execute(
         select(DeliveryPhoto).where(DeliveryPhoto.id == photo_id)
     )

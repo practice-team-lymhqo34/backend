@@ -31,6 +31,7 @@ async def test_get_daily_statistics_for_month(
     order1 = Order(
         title="Order 1",
         weight=10.0,
+        distance=10.0,
         total_amount=100.0,
         status=OrderStatus.COMPLETED,
         received_at=datetime(2026, 5, 10, 10, 0),
@@ -39,6 +40,7 @@ async def test_get_daily_statistics_for_month(
     order2 = Order(
         title="Order 2",
         weight=20.0,
+        distance=20.0,
         total_amount=200.0,
         status=OrderStatus.COMPLETED,
         received_at=datetime(2026, 5, 10, 15, 0),
@@ -47,6 +49,7 @@ async def test_get_daily_statistics_for_month(
     order3 = Order(
         title="Order 3",
         weight=30.0,
+        distance=30.0,
         total_amount=300.0,
         status=OrderStatus.COMPLETED,
         received_at=datetime(2026, 5, 11, 10, 0),

@@ -20,7 +20,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Add columns as nullable first
     op.add_column(
         "invoices",
         sa.Column(
