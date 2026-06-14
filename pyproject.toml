@@ -1,6 +1,6 @@
 [project]
 name = "logiflow"
-version = "0.1.0"
+version = "1.0.0"
 description = "LogiFlow project for logistics management API"
 requires-python = ">=3.13"
 dependencies = [

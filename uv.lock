@@ -659,7 +659,7 @@ wheels = [
 
 [[package]]
 name = "logiflow"
-version = "0.1.0"
+version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aioboto3" },
